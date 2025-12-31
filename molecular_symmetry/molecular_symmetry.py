@@ -351,7 +351,11 @@ class PointGroup(ABC):
         elif op.startswith('σ'):
             if 'h' in op:  # Horizontal (xy plane)
                 return np.array([[1, 0, 0], [0, 1, 0], [0, 0, -1]])
-            elif 'v' in op:  # Vertical - assume xz plane
+            elif 'xz' in op:  # Mirror in xz plane (y → -y)
+                return np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
+            elif 'yz' in op:  # Mirror in yz plane (x → -x)
+                return np.array([[-1, 0, 0], [0, 1, 0], [0, 0, 1]])
+            elif 'v' in op:  # Generic vertical - assume xz plane
                 return np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
             elif 'd' in op:  # Dihedral - assume x=y plane
                 return np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
@@ -398,15 +402,24 @@ class PointGroup(ABC):
         
         # Special handling for coordinate functions x, y, z
         if func in ['x', 'y', 'z']:
-            coord_index = {'x': 0, 'y': 1, 'z': 2}[func]
+            # Check if this is a high-symmetry group where coordinates form multidimensional irreps
+            high_symmetry_groups = ['Oh', 'Td', 'Ih', 'O', 'T', 'I']
             
-            for class_name in self.classes:
-                # Get transformation matrix for this operation
-                matrix = self._get_transformation_matrix(class_name)
-                
-                # The character is the diagonal element for this coordinate
-                char = matrix[coord_index, coord_index]
-                characters.append(char)
+            if self.name in high_symmetry_groups:
+                # High symmetry: x,y,z together form a 3D irrep (like T1u)
+                # The character is the trace of the full 3x3 transformation matrix
+                for class_name in self.classes:
+                    matrix = self._get_transformation_matrix(class_name)
+                    char = float(np.trace(matrix))
+                    characters.append(char)
+            else:
+                # Lower symmetry: individual coordinates have well-defined irreps
+                # Use the diagonal element for this specific coordinate
+                coord_index = {'x': 0, 'y': 1, 'z': 2}[func]
+                for class_name in self.classes:
+                    matrix = self._get_transformation_matrix(class_name)
+                    char = float(matrix[coord_index, coord_index])
+                    characters.append(char)
         
         else:
             # For other functions, use the original point-evaluation method
