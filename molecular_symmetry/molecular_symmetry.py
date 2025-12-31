@@ -687,6 +687,87 @@ class PointGroup(ABC):
                 'x2': 'Σ+g', 'y2': 'Σ+g',
                 'x2+y2+z2': 'Σ+g', 'r2': 'Σ+g',
             },
+            # =============================================================================
+            # DOUBLE GROUPS WITH SPINOR BASIS FUNCTIONS
+            # =============================================================================
+            'C2v*': {
+                # Integer spin functions (same as C2v)
+                'x': 'B1', 'y': 'B2', 'z': 'A1',
+                'rx': 'B2', 'ry': 'B1', 'rz': 'A2',
+                'dz2': 'A1', 'dx2-y2': 'A1', 'dxy': 'A2',
+                'dxz': 'B1', 'dyz': 'B2',
+                # Half-integer spinor functions
+                'j=1/2': 'E1/2', 'spinor1/2': 'E1/2',
+                'j=3/2': 'E3/2', 'spinor3/2': 'E3/2',
+                # Electron spin functions
+                'α': 'E1/2', 'β': 'E1/2',  # Kramers doublet
+                'up': 'E1/2', 'down': 'E1/2',
+                # p1/2 and p3/2 orbitals for spin-orbit coupling
+                'p1/2': 'E1/2', 'p3/2': 'E3/2',
+            },
+            'Oh*': {
+                # Integer spin functions (same as Oh)
+                'x': 'T1u', 'y': 'T1u', 'z': 'T1u',
+                'rx': 'T1g', 'ry': 'T1g', 'rz': 'T1g',
+                'dz2': 'Eg', 'dx2-y2': 'Eg', 'x2-y2': 'Eg',
+                'dxy': 'T2g', 'dxz': 'T2g', 'dyz': 'T2g',
+                '2z2-x2-y2': 'Eg', 'xy': 'T2g', 'xz': 'T2g', 'yz': 'T2g',
+                # Half-integer spinor functions
+                'j=1/2': 'E1/2g', 'j=1/2g': 'E1/2g', 'j=1/2u': 'E1/2u',
+                'j=3/2': 'E3/2g', 'j=3/2g': 'E3/2g', 'j=3/2u': 'E3/2u',
+                'j=5/2': 'E5/2g', 'j=5/2g': 'E5/2g', 'j=5/2u': 'E5/2u',
+                # Electron spin functions
+                'α': 'E1/2g', 'β': 'E1/2g',  # Kramers doublet
+                'up': 'E1/2g', 'down': 'E1/2g',
+                # t2g orbitals with spin-orbit coupling split to j=1/2, j=3/2
+                't2g,j=1/2': 'E1/2g', 't2g,j=3/2': 'E3/2g',
+                # eg orbitals with spin-orbit coupling  
+                'eg,j=1/2': 'E1/2g', 'eg,j=3/2': 'E3/2g',
+                # p orbitals with spin-orbit coupling
+                'p1/2': 'E1/2u', 'p3/2': 'E3/2u',
+            },
+            'Td*': {
+                # Integer spin functions (same as Td)
+                'x': 'T2', 'y': 'T2', 'z': 'T2',
+                'dz2': 'E', 'dx2-y2': 'E', 'x2-y2': 'E',
+                'dxy': 'T2', 'dxz': 'T2', 'dyz': 'T2',
+                '2z2-x2-y2': 'E', 'xy': 'T2', 'xz': 'T2', 'yz': 'T2',
+                # Half-integer spinor functions
+                'j=1/2': 'E1/2', 'spinor1/2': 'E1/2',
+                'j=3/2': 'E3/2', 'spinor3/2': 'E3/2', 
+                'j=5/2': 'E5/2', 'spinor5/2': 'E5/2',
+                # Electron spin functions
+                'α': 'E1/2', 'β': 'E1/2',  # Kramers doublet
+                'up': 'E1/2', 'down': 'E1/2',
+                # e orbitals with spin-orbit coupling
+                'e,j=1/2': 'E1/2', 'e,j=3/2': 'E3/2',
+                # t2 orbitals with spin-orbit coupling
+                't2,j=1/2': 'E1/2', 't2,j=3/2': 'E3/2', 't2,j=5/2': 'E5/2',
+                # p orbitals with spin-orbit coupling
+                'p1/2': 'E1/2', 'p3/2': 'E3/2',
+            },
+            'D4h*': {
+                # Integer spin functions (same as D4h)
+                'x': 'Eu', 'y': 'Eu', 'z': 'A2u',
+                'rx': 'Eg', 'ry': 'Eg', 'rz': 'A2g',
+                'dz2': 'A1g', 'dx2-y2': 'B1g', 'dxy': 'B2g',
+                'dxz': 'Eg', 'dyz': 'Eg',
+                '2z2-x2-y2': 'A1g', 'x2-y2': 'B1g', 'xy': 'B2g',
+                'xz': 'Eg', 'yz': 'Eg',
+                # Half-integer spinor functions
+                'j=1/2': 'E1/2g', 'j=1/2g': 'E1/2g', 'j=1/2u': 'E1/2u',
+                'j=3/2': 'E3/2g', 'j=3/2g': 'E3/2g', 'j=3/2u': 'E3/2u',
+                # Electron spin functions
+                'α': 'E1/2g', 'β': 'E1/2g',  # Kramers doublet
+                'up': 'E1/2g', 'down': 'E1/2g',
+                # d orbitals with spin-orbit coupling
+                'dz2,j=1/2': 'E1/2g', 'dx2-y2,j=1/2': 'E1/2g', 'dxy,j=1/2': 'E1/2g',
+                'dxz,j=1/2': 'E1/2g', 'dyz,j=1/2': 'E1/2g',
+                'dz2,j=3/2': 'E3/2g', 'dx2-y2,j=3/2': 'E3/2g', 'dxy,j=3/2': 'E3/2g', 
+                'dxz,j=3/2': 'E3/2g', 'dyz,j=3/2': 'E3/2g',
+                # p orbitals with spin-orbit coupling
+                'p1/2': 'E1/2u', 'p3/2': 'E3/2u',
+            },
         }
 
 class C1(PointGroup):
@@ -1187,10 +1268,139 @@ class Dinfh(PointGroup):
         return super().reduce_representation(reducible_rep)
 
 
+# =============================================================================
+# DOUBLE GROUPS FOR HALF-INTEGER SPIN SYSTEMS
+# =============================================================================
+
+class C2vStar(PointGroup):
+    """C2v* double group - includes half-integer representations for fermions."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C2v*"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        # Double group includes R (2π rotation) operations
+        self.classes = ['E', 'C2', 'σv(xz)', 'σv(yz)', 'R', 'RC2', 'Rσv(xz)', 'Rσv(yz)']
+        self.class_sizes = [1, 1, 1, 1, 1, 1, 1, 1]
+        self.order = 8
+        self.irreps = {
+            # Integer spin representations (same as C2v)
+            'A1': [1, 1, 1, 1, 1, 1, 1, 1],
+            'A2': [1, 1, -1, -1, 1, 1, -1, -1],
+            'B1': [1, -1, 1, -1, 1, -1, 1, -1],
+            'B2': [1, -1, -1, 1, 1, -1, -1, 1],
+            # Half-integer spin representations (Kramers doublets)
+            'E1/2': [2, 0, 0, 0, -2, 0, 0, 0],  # j = 1/2
+            'E3/2': [2, 0, 0, 0, -2, 0, 0, 0],  # j = 3/2
+        }
+
+
+class OhStar(PointGroup):
+    """Oh* double group - octahedral symmetry with half-integer representations."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "Oh*"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        # Double group includes R operations  
+        self.classes = ['E', '8C3', '6C2', '6C4', '3C2', 'i', '6S4', '8S6', '3σh', '6σd',
+                       'R', '8RC3', '6RC2', '6RC4', '3RC2', 'Ri', '6RS4', '8RS6', '3Rσh', '6Rσd']
+        self.class_sizes = [1, 8, 6, 6, 3, 1, 6, 8, 3, 6,
+                           1, 8, 6, 6, 3, 1, 6, 8, 3, 6]
+        self.order = 96  # Double the original Oh order (48)
+        self.irreps = {
+            # Integer spin representations (same as Oh)
+            'A1g': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            'A2g': [1, 1, -1, -1, 1, 1, -1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, -1],
+            'Eg': [2, -1, 0, 0, 2, 2, 0, -1, 2, 0, 2, -1, 0, 0, 2, 2, 0, -1, 2, 0],
+            'T1g': [3, 0, -1, 1, -1, 3, 1, 0, -1, -1, 3, 0, -1, 1, -1, 3, 1, 0, -1, -1],
+            'T2g': [3, 0, 1, -1, -1, 3, -1, 0, -1, 1, 3, 0, 1, -1, -1, 3, -1, 0, -1, 1],
+            'A1u': [1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1],
+            'A2u': [1, 1, -1, -1, 1, -1, 1, -1, -1, 1, 1, 1, -1, -1, 1, -1, 1, -1, -1, 1],
+            'Eu': [2, -1, 0, 0, 2, -2, 0, 1, -2, 0, 2, -1, 0, 0, 2, -2, 0, 1, -2, 0],
+            'T1u': [3, 0, -1, 1, -1, -3, -1, 0, 1, 1, 3, 0, -1, 1, -1, -3, -1, 0, 1, 1],
+            'T2u': [3, 0, 1, -1, -1, -3, 1, 0, 1, -1, 3, 0, 1, -1, -1, -3, 1, 0, 1, -1],
+            # Half-integer spin representations (Kramers doublets)
+            'E1/2g': [2, 1, 0, 0, -2, 2, 0, -1, -2, 0, -2, -1, 0, 0, 2, -2, 0, 1, 2, 0],  # j = 1/2
+            'E1/2u': [2, 1, 0, 0, -2, -2, 0, 1, 2, 0, -2, -1, 0, 0, 2, 2, 0, -1, -2, 0],  # j = 1/2
+            'E3/2g': [4, 1, 0, 0, 0, 4, 0, -1, 0, 0, -4, -1, 0, 0, 0, -4, 0, 1, 0, 0],    # j = 3/2
+            'E3/2u': [4, 1, 0, 0, 0, -4, 0, 1, 0, 0, -4, -1, 0, 0, 0, 4, 0, -1, 0, 0],    # j = 3/2
+            'E5/2g': [4, -1, 0, 0, 0, 4, 0, 1, 0, 0, -4, 1, 0, 0, 0, -4, 0, -1, 0, 0],    # j = 5/2
+            'E5/2u': [4, -1, 0, 0, 0, -4, 0, -1, 0, 0, -4, 1, 0, 0, 0, 4, 0, 1, 0, 0],    # j = 5/2
+        }
+
+
+class TdStar(PointGroup):
+    """Td* double group - tetrahedral symmetry with half-integer representations."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "Td*"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        # Double group includes R operations
+        self.classes = ['E', '8C3', '3C2', '6S4', '6σd', 'R', '8RC3', '3RC2', '6RS4', '6Rσd']
+        self.class_sizes = [1, 8, 3, 6, 6, 1, 8, 3, 6, 6]
+        self.order = 48  # Double the original Td order (24)
+        self.irreps = {
+            # Integer spin representations (same as Td)
+            'A1': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            'A2': [1, 1, 1, -1, -1, 1, 1, 1, -1, -1],
+            'E': [2, -1, 2, 0, 0, 2, -1, 2, 0, 0],
+            'T1': [3, 0, -1, 1, -1, 3, 0, -1, 1, -1],
+            'T2': [3, 0, -1, -1, 1, 3, 0, -1, -1, 1],
+            # Half-integer spin representations (Kramers doublets)
+            'E1/2': [2, 1, -2, 0, 0, -2, -1, 2, 0, 0],    # j = 1/2
+            'E3/2': [4, 1, 0, 0, 0, -4, -1, 0, 0, 0],     # j = 3/2
+            'E5/2': [4, -1, 0, 0, 0, -4, 1, 0, 0, 0],     # j = 5/2
+        }
+
+
+class D4hStar(PointGroup):
+    """D4h* double group - square planar symmetry with half-integer representations."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D4h*"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        # Double group includes R operations
+        self.classes = ['E', '2C4', 'C2', '2C2\'', '2C2"', 'i', '2S4', 'σh', '2σv', '2σd',
+                       'R', '2RC4', 'RC2', '2RC2\'', '2RC2"', 'Ri', '2RS4', 'Rσh', '2Rσv', '2Rσd']
+        self.class_sizes = [1, 2, 1, 2, 2, 1, 2, 1, 2, 2,
+                           1, 2, 1, 2, 2, 1, 2, 1, 2, 2]
+        self.order = 32  # Double the original D4h order (16)
+        self.irreps = {
+            # Integer spin representations (same as D4h)
+            'A1g': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            'A2g': [1, 1, 1, -1, -1, 1, 1, 1, -1, -1, 1, 1, 1, -1, -1, 1, 1, 1, -1, -1],
+            'B1g': [1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1],
+            'B2g': [1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, -1, 1],
+            'Eg': [2, 0, -2, 0, 0, 2, 0, -2, 0, 0, 2, 0, -2, 0, 0, 2, 0, -2, 0, 0],
+            'A1u': [1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1],
+            'A2u': [1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1],
+            'B1u': [1, -1, 1, 1, -1, -1, 1, -1, -1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, 1],
+            'B2u': [1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1],
+            'Eu': [2, 0, -2, 0, 0, -2, 0, 2, 0, 0, 2, 0, -2, 0, 0, -2, 0, 2, 0, 0],
+            # Half-integer spin representations (Kramers doublets)
+            'E1/2g': [2, 1.414, 0, 0, -1.414, 2, -1.414, 0, 0, 1.414, -2, -1.414, 0, 0, 1.414, -2, 1.414, 0, 0, -1.414],
+            'E1/2u': [2, 1.414, 0, 0, -1.414, -2, 1.414, 0, 0, -1.414, -2, -1.414, 0, 0, 1.414, 2, -1.414, 0, 0, 1.414],
+            'E3/2g': [2, -1.414, 0, 0, 1.414, 2, 1.414, 0, 0, -1.414, -2, 1.414, 0, 0, -1.414, -2, -1.414, 0, 0, 1.414],
+            'E3/2u': [2, -1.414, 0, 0, 1.414, -2, -1.414, 0, 0, 1.414, -2, 1.414, 0, 0, -1.414, 2, 1.414, 0, 0, -1.414],
+        }
+
+
 class PointGroupFactory:
     """Factory class to create point group objects."""
     
     _point_groups = {
+        # Regular point groups
         'C1': C1,
         'Ci': Ci,
         'Cs': Cs,
@@ -1214,7 +1424,12 @@ class PointGroupFactory:
         'Cinfv': Cinfv,
         'C∞v': Cinfv,
         'Dinfh': Dinfh,
-        'D∞h': Dinfh
+        'D∞h': Dinfh,
+        # Double groups for half-integer spin systems
+        'C2v*': C2vStar,
+        'Oh*': OhStar,
+        'Td*': TdStar,
+        'D4h*': D4hStar,
     }
     
     @classmethod
