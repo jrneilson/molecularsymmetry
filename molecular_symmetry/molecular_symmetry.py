@@ -196,6 +196,193 @@ class PointGroup(ABC):
                 else:
                     row += f"{'·':<12}"  # Symmetric, so use dot for lower triangle
             print(row)
+    
+    def _transform_coordinates(self, operation_type: str, x: float, y: float, z: float) -> tuple:
+        """
+        Transform coordinates (x,y,z) under a symmetry operation.
+        
+        Returns the transformed coordinates as (x', y', z').
+        This implementation covers common symmetry operations for standard orientations.
+        """
+        op = operation_type.strip()
+        
+        if op == 'E':  # Identity
+            return (x, y, z)
+        
+        # C2 rotations
+        elif op == 'C2' or op.startswith('C2z'):  # C2 around z
+            return (-x, -y, z)
+        elif op.startswith('C2x'):  # C2 around x
+            return (x, -y, -z)
+        elif op.startswith('C2y'):  # C2 around y
+            return (-x, y, -z)
+        elif op.startswith('C2'):  # Generic C2 - assume around z for now
+            return (-x, -y, z)
+            
+        # C3 rotations (120°)
+        elif op.startswith('C3'):
+            cos_120 = -0.5
+            sin_120 = 0.866025  # sqrt(3)/2
+            return (cos_120*x - sin_120*y, sin_120*x + cos_120*y, z)
+            
+        # C4 rotations (90°)
+        elif op.startswith('C4'):
+            return (-y, x, z)  # 90° rotation around z
+            
+        # C6 rotations (60°)
+        elif op.startswith('C6'):
+            cos_60 = 0.5
+            sin_60 = 0.866025  # sqrt(3)/2
+            return (cos_60*x - sin_60*y, sin_60*x + cos_60*y, z)
+            
+        # Inversion
+        elif op == 'i':
+            return (-x, -y, -z)
+            
+        # Mirror planes
+        elif op.startswith('σ'):
+            if 'h' in op:  # Horizontal (xy plane)
+                return (x, y, -z)
+            elif 'v' in op or op == 'σv':  # Vertical - assume xz plane
+                return (x, -y, z)
+            elif 'd' in op:  # Dihedral - assume x=y plane
+                return (y, x, z)
+            else:  # Generic mirror - assume xz plane
+                return (x, -y, z)
+                
+        # Improper rotations
+        elif op.startswith('S4'):  # S4 = C4 + i
+            return (y, -x, -z)  # 90° rotation around z + inversion
+        elif op.startswith('S6'):  # S6 = C6 + i  
+            cos_60 = 0.5
+            sin_60 = 0.866025
+            return (-cos_60*x + sin_60*y, -sin_60*x - cos_60*y, -z)
+        elif op.startswith('S3'):  # S3 = C3 + i
+            cos_120 = -0.5
+            sin_120 = 0.866025
+            return (-cos_120*x + sin_120*y, -sin_120*x - cos_120*y, -z)
+        
+        # For point group specific operations, make educated guesses
+        # This is a limitation - ideally we'd have operation-specific transformations
+        else:
+            # Default: assume identity for unrecognized operations
+            return (x, y, z)
+    
+    def _evaluate_basis_function(self, function_expr: str, x: float, y: float, z: float) -> float:
+        """
+        Evaluate a basis function at coordinates (x,y,z).
+        
+        Supports functions like: x, y, z, xy, xz, yz, x2-y2, z2, xyz, x2, y2, etc.
+        """
+        expr = function_expr.lower().replace(' ', '').replace('²', '2').replace('^', '')
+        
+        # Handle common basis functions
+        if expr == 'x':
+            return x
+        elif expr == 'y':
+            return y
+        elif expr == 'z':
+            return z
+        elif expr == 'xy':
+            return x * y
+        elif expr == 'xz':
+            return x * z
+        elif expr == 'yz':
+            return y * z
+        elif expr in ['x2-y2', 'x²-y²']:
+            return x*x - y*y
+        elif expr in ['z2', 'z²']:
+            return z*z
+        elif expr in ['x2', 'x²']:
+            return x*x
+        elif expr in ['y2', 'y²']:
+            return y*y
+        elif expr == 'xyz':
+            return x * y * z
+        elif expr in ['3z2-r2', '3z²-r²', '2z2-x2-y2', '2z²-x²-y²']:
+            return 2*z*z - x*x - y*y
+        elif expr in ['x3', 'x³']:
+            return x*x*x
+        elif expr in ['y3', 'y³']:
+            return y*y*y
+        elif expr in ['z3', 'z³']:
+            return z*z*z
+        else:
+            raise ValueError(f"Basis function '{function_expr}' not recognized")
+    
+    def identify_basis_function(self, function_expr: str, tolerance: float = 1e-8) -> str:
+        """
+        Algorithmically determine which irreducible representation a basis function belongs to.
+        
+        This method calculates the character of how the function transforms under each 
+        symmetry operation class, then uses the reduction formula to find the matching irrep.
+        
+        Args:
+            function_expr: Mathematical expression for the basis function (e.g., 'x', 'xy', 'x2-y2')
+            tolerance: Numerical tolerance for character comparison
+            
+        Returns:
+            Name of the irreducible representation
+            
+        Example:
+            >>> c2v = get_point_group('C2v')
+            >>> c2v.identify_basis_function('x')
+            'B1'
+            >>> c2v.identify_basis_function('z2')
+            'A1'
+        """
+        # Use a single general test point (not on any symmetry elements)
+        x, y, z = 1.1, 1.3, 0.9
+        
+        characters = []
+        
+        for class_name in self.classes:
+            # Calculate how the function transforms under this symmetry operation
+            original_value = self._evaluate_basis_function(function_expr, x, y, z)
+            
+            # Transform coordinates under this symmetry operation
+            x_prime, y_prime, z_prime = self._transform_coordinates(class_name, x, y, z)
+            
+            # Evaluate function at transformed coordinates
+            transformed_value = self._evaluate_basis_function(function_expr, x_prime, y_prime, z_prime)
+            
+            # Calculate the character (transformation coefficient)
+            if abs(original_value) > tolerance:
+                char = transformed_value / original_value
+            else:
+                # Handle case where original function value is zero
+                char = 1.0 if abs(transformed_value) < tolerance else 0.0
+            
+            characters.append(round(char, 6))
+        
+        # Reduce this representation to find which irrep it matches
+        result = self.reduce_representation(characters)
+        
+        # Find the irrep with coefficient 1 (should be unique for basis functions)
+        matching_irreps = []
+        for irrep, coeff in result.items():
+            if abs(coeff - 1.0) < tolerance:
+                matching_irreps.append(irrep)
+        
+        if len(matching_irreps) == 1:
+            return matching_irreps[0]
+        elif len(matching_irreps) == 0:
+            # Try to find the best match
+            best_irrep = None
+            best_coeff = 0.0
+            for irrep, coeff in result.items():
+                if coeff > best_coeff:
+                    best_coeff = coeff
+                    best_irrep = irrep
+            
+            if best_coeff > 0.8:  # Close enough
+                return best_irrep
+            else:
+                raise ValueError(f"No matching irreducible representation found for function '{function_expr}'. "
+                               f"Characters: {characters}, Reduction: {result}")
+        else:
+            raise ValueError(f"Multiple irreps found for function '{function_expr}': {matching_irreps}. "
+                           f"This suggests the function may span multiple irreps or there's an error in the calculation.")
 
 
 class C1(PointGroup):
