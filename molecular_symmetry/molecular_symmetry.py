@@ -106,6 +106,96 @@ class PointGroup(ABC):
                 terms.append(f"{coeff}{irrep}")
         
         return " ⊕ ".join(terms)
+    
+    def direct_product(self, irrep1: str, irrep2: str) -> Dict[str, int]:
+        """
+        Calculate the direct product of two irreducible representations.
+        
+        The direct product Γ1 ⊗ Γ2 gives the symmetry of the product of 
+        functions belonging to irreps Γ1 and Γ2.
+        
+        Args:
+            irrep1: Name of first irreducible representation
+            irrep2: Name of second irreducible representation
+            
+        Returns:
+            Dictionary mapping irrep names to their coefficients in the direct product
+            
+        Example:
+            >>> oh = get_point_group('Oh')
+            >>> oh.direct_product('T1u', 'T2g')
+            {'T1g': 1, 'T2g': 1, 'Eg': 1, 'A2g': 1}
+        """
+        if irrep1 not in self.irreps:
+            raise ValueError(f"Irrep '{irrep1}' not found in {self.name} character table")
+        if irrep2 not in self.irreps:
+            raise ValueError(f"Irrep '{irrep2}' not found in {self.name} character table")
+        
+        # Get characters for both irreps
+        chars1 = self.irreps[irrep1]
+        chars2 = self.irreps[irrep2]
+        
+        # Calculate direct product characters: χ(Γ1 ⊗ Γ2) = χ(Γ1) * χ(Γ2)
+        product_chars = []
+        for c1, c2 in zip(chars1, chars2):
+            if isinstance(c1, complex) or isinstance(c2, complex):
+                product_chars.append(complex(c1) * complex(c2))
+            else:
+                product_chars.append(c1 * c2)
+        
+        # Reduce the direct product to irreducible representations
+        return self.reduce_representation(product_chars)
+    
+    def get_direct_product_table(self) -> Dict[Tuple[str, str], Dict[str, int]]:
+        """
+        Generate the complete direct product table for this point group.
+        
+        Returns:
+            Dictionary mapping (irrep1, irrep2) tuples to their direct product decomposition
+            
+        Example:
+            >>> oh = get_point_group('Oh')
+            >>> table = oh.get_direct_product_table()
+            >>> table[('T1u', 'T2g')]
+            {'T1g': 1, 'T2g': 1, 'Eg': 1, 'A2g': 1}
+        """
+        table = {}
+        irrep_names = list(self.irreps.keys())
+        
+        for i, irrep1 in enumerate(irrep_names):
+            for j, irrep2 in enumerate(irrep_names):
+                if j >= i:  # Only calculate upper triangle to avoid duplicates
+                    table[(irrep1, irrep2)] = self.direct_product(irrep1, irrep2)
+        
+        return table
+    
+    def print_direct_product_table(self):
+        """Print the direct product table in a formatted way."""
+        print(f"\n{'='*80}")
+        print(f"Direct Product Table for Point Group: {self.name}")
+        print(f"{'='*80}")
+        
+        irrep_names = list(self.irreps.keys())
+        
+        # Print header
+        header = f"{'×':<8}"
+        for irrep in irrep_names:
+            header += f"{irrep:<12}"
+        print(header)
+        print("-" * 80)
+        
+        # Print table rows
+        for i, irrep1 in enumerate(irrep_names):
+            row = f"{irrep1:<8}"
+            for j, irrep2 in enumerate(irrep_names):
+                if j >= i:
+                    product = self.direct_product(irrep1, irrep2)
+                    product_str = " ⊕ ".join([f"{coeff}{name}" if coeff > 1 else name 
+                                             for name, coeff in product.items()])
+                    row += f"{product_str:<12}"
+                else:
+                    row += f"{'·':<12}"  # Symmetric, so use dot for lower triangle
+            print(row)
 
 
 class C1(PointGroup):
@@ -677,6 +767,52 @@ def get_point_group(name: str) -> PointGroup:
         PointGroup object
     """
     return PointGroupFactory.create(name)
+
+
+def calculate_direct_product(point_group_name: str, irrep1: str, irrep2: str) -> Dict[str, int]:
+    """
+    Convenience function to calculate direct product of two irreps.
+    
+    Args:
+        point_group_name: Name of the point group (e.g., 'Oh', 'Td')
+        irrep1: First irreducible representation
+        irrep2: Second irreducible representation
+        
+    Returns:
+        Dictionary mapping irrep names to coefficients in the direct product
+        
+    Example:
+        >>> calculate_direct_product('Oh', 'T1u', 'T2g')
+        {'T1g': 1, 'T2g': 1, 'Eg': 1, 'A2g': 1}
+    """
+    pg = get_point_group(point_group_name)
+    return pg.direct_product(irrep1, irrep2)
+
+
+def direct_product_label(point_group_name: str, irrep1: str, irrep2: str) -> str:
+    """
+    Get formatted label for direct product of two irreps.
+    
+    Args:
+        point_group_name: Name of the point group
+        irrep1: First irreducible representation
+        irrep2: Second irreducible representation
+        
+    Returns:
+        Formatted string showing the direct product decomposition
+        
+    Example:
+        >>> direct_product_label('Oh', 'T1u', 'T2g')
+        'T1g ⊕ T2g ⊕ Eg ⊕ A2g'
+    """
+    product = calculate_direct_product(point_group_name, irrep1, irrep2)
+    terms = []
+    for irrep, coeff in product.items():
+        if coeff == 1:
+            terms.append(irrep)
+        else:
+            terms.append(f"{coeff}{irrep}")
+    return " ⊕ ".join(terms)
 
 
 if __name__ == "__main__":
