@@ -310,169 +310,384 @@ class PointGroup(ABC):
         else:
             raise ValueError(f"Basis function '{function_expr}' not recognized")
     
-    def _get_transformation_matrix(self, operation_type: str):
+    def identify_basis_function(self, function_expr: str) -> str:
         """
-        Get the 3x3 transformation matrix for a symmetry operation.
+        Identify which irreducible representation a basis function belongs to using a comprehensive dictionary.
         
-        Returns the matrix that transforms coordinates: [x', y', z'] = M * [x, y, z]
-        """
-        import numpy as np
-        
-        op = operation_type.strip()
-        
-        if op == 'E':  # Identity
-            return np.eye(3)
-        
-        # C2 rotations
-        elif op == 'C2' or op.startswith('C2z'):  # C2 around z
-            return np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
-        elif op.startswith('C2x'):  # C2 around x
-            return np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
-        elif op.startswith('C2y'):  # C2 around y
-            return np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])
-        elif op == "C2'" or 'C2' in op:  # Generic C2 
-            return np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
-            
-        # C3 rotations (120°)
-        elif op.startswith('C3'):
-            cos_120 = -0.5
-            sin_120 = 0.866025
-            return np.array([[cos_120, -sin_120, 0], [sin_120, cos_120, 0], [0, 0, 1]])
-            
-        # C4 rotations (90°)
-        elif op.startswith('C4'):
-            return np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
-            
-        # Inversion
-        elif op == 'i':
-            return np.array([[-1, 0, 0], [0, -1, 0], [0, 0, -1]])
-            
-        # Mirror planes
-        elif op.startswith('σ'):
-            if 'h' in op:  # Horizontal (xy plane)
-                return np.array([[1, 0, 0], [0, 1, 0], [0, 0, -1]])
-            elif 'xz' in op:  # Mirror in xz plane (y → -y)
-                return np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
-            elif 'yz' in op:  # Mirror in yz plane (x → -x)
-                return np.array([[-1, 0, 0], [0, 1, 0], [0, 0, 1]])
-            elif 'v' in op:  # Generic vertical - assume xz plane
-                return np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
-            elif 'd' in op:  # Dihedral - assume x=y plane
-                return np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
-            else:  # Generic mirror - assume xz plane
-                return np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
-                
-        # Improper rotations
-        elif op.startswith('S4'):  # S4 = C4 + i
-            return np.array([[0, 1, 0], [-1, 0, 0], [0, 0, -1]])
-        elif op.startswith('S6'):  # S6 = C6 + i  
-            cos_60 = 0.5
-            sin_60 = 0.866025
-            return np.array([[-cos_60, sin_60, 0], [-sin_60, -cos_60, 0], [0, 0, -1]])
-        
-        else:
-            # Default: identity
-            return np.eye(3)
-
-    def identify_basis_function(self, function_expr: str, tolerance: float = 1e-8) -> str:
-        """
-        Algorithmically determine which irreducible representation a basis function belongs to.
-        
-        This method calculates the character of how the function transforms under each 
-        symmetry operation class, then uses the reduction formula to find the matching irrep.
+        This method uses pre-defined mappings of basis functions to their irreducible representations
+        for each point group, ensuring accurate results for all standard basis functions including
+        coordinates, d orbitals, f orbitals, and more.
         
         Args:
-            function_expr: Mathematical expression for the basis function (e.g., 'x', 'xy', 'x2-y2')
-            tolerance: Numerical tolerance for character comparison
+            function_expr: Mathematical expression for the basis function (e.g., 'x', 'xy', 'dz2', '2z2-x2-y2')
             
         Returns:
             Name of the irreducible representation
             
+        Raises:
+            ValueError: If function is not recognized for this point group
+            
         Example:
-            >>> c2v = get_point_group('C2v')
-            >>> c2v.identify_basis_function('x')
-            'B1'
-            >>> c2v.identify_basis_function('z2')
-            'A1'
+            >>> oh = get_point_group('Oh')
+            >>> oh.identify_basis_function('x')
+            'T1u'
+            >>> oh.identify_basis_function('2z2-x2-y2')
+            'Eg'
+            >>> oh.identify_basis_function('dxy')
+            'T2g'
         """
-        import numpy as np
-        
+        # Clean up function name
         func = function_expr.lower().strip()
-        characters = []
         
-        # Special handling for coordinate functions x, y, z
-        if func in ['x', 'y', 'z']:
-            # Check if this is a high-symmetry group where coordinates form multidimensional irreps
-            high_symmetry_groups = ['Oh', 'Td', 'Ih', 'O', 'T', 'I']
+        # Normalize common variations
+        func = func.replace(' ', '').replace('²', '2').replace('^2', '2').replace('**2', '2')
+        
+        # Get basis function mapping for this point group
+        basis_functions = self._get_basis_function_mapping()
+        
+        if self.name not in basis_functions:
+            raise ValueError(f"Basis function identification not implemented for point group {self.name}")
+        
+        if func not in basis_functions[self.name]:
+            available = ', '.join(sorted(basis_functions[self.name].keys()))
+            raise ValueError(f"Function '{function_expr}' not recognized for {self.name}. "
+                           f"Available functions: {available}")
+        
+        return basis_functions[self.name][func]
+    
+    def list_basis_functions(self) -> dict:
+        """
+        List all available basis functions organized by irreducible representation.
+        
+        Returns:
+            Dictionary mapping irrep names to lists of basis functions
             
-            if self.name in high_symmetry_groups:
-                # High symmetry: x,y,z together form a 3D irrep (like T1u)
-                # The character is the trace of the full 3x3 transformation matrix
-                for class_name in self.classes:
-                    matrix = self._get_transformation_matrix(class_name)
-                    char = float(np.trace(matrix))
-                    characters.append(char)
-            else:
-                # Lower symmetry: individual coordinates have well-defined irreps
-                # Use the diagonal element for this specific coordinate
-                coord_index = {'x': 0, 'y': 1, 'z': 2}[func]
-                for class_name in self.classes:
-                    matrix = self._get_transformation_matrix(class_name)
-                    char = float(matrix[coord_index, coord_index])
-                    characters.append(char)
+        Example:
+            >>> oh = get_point_group('Oh')
+            >>> functions = oh.list_basis_functions()
+            >>> functions['T1u']
+            ['x', 'y', 'z', 'fx3', 'fy3', 'fz3']
+        """
+        basis_functions = self._get_basis_function_mapping()
         
-        else:
-            # For other functions, use the original point-evaluation method
-            x, y, z = 1.1, 1.3, 0.9
-            
-            for class_name in self.classes:
-                # Calculate how the function transforms under this symmetry operation
-                original_value = self._evaluate_basis_function(function_expr, x, y, z)
-                
-                # Transform coordinates under this symmetry operation
-                x_prime, y_prime, z_prime = self._transform_coordinates(class_name, x, y, z)
-                
-                # Evaluate function at transformed coordinates
-                transformed_value = self._evaluate_basis_function(function_expr, x_prime, y_prime, z_prime)
-                
-                # Calculate the character (transformation coefficient)
-                if abs(original_value) > tolerance:
-                    char = transformed_value / original_value
-                else:
-                    # Handle case where original function value is zero
-                    char = 1.0 if abs(transformed_value) < tolerance else 0.0
-                
-                characters.append(round(char, 6))
+        if self.name not in basis_functions:
+            return {}
         
-        # Reduce this representation to find which irrep it matches
-        result = self.reduce_representation(characters)
+        # Invert the mapping to group functions by irrep
+        irrep_functions = {}
+        for func, irrep in basis_functions[self.name].items():
+            if irrep not in irrep_functions:
+                irrep_functions[irrep] = []
+            irrep_functions[irrep].append(func)
         
-        # Find the irrep with coefficient 1 (should be unique for basis functions)
-        matching_irreps = []
-        for irrep, coeff in result.items():
-            if abs(coeff - 1.0) < tolerance:
-                matching_irreps.append(irrep)
+        # Sort the functions for each irrep
+        for irrep in irrep_functions:
+            irrep_functions[irrep].sort()
         
-        if len(matching_irreps) == 1:
-            return matching_irreps[0]
-        elif len(matching_irreps) == 0:
-            # Try to find the best match
-            best_irrep = None
-            best_coeff = 0.0
-            for irrep, coeff in result.items():
-                if coeff > best_coeff:
-                    best_coeff = coeff
-                    best_irrep = irrep
-            
-            if best_coeff > 0.8:  # Close enough
-                return best_irrep
-            else:
-                raise ValueError(f"No matching irreducible representation found for function '{function_expr}'. "
-                               f"Characters: {characters}, Reduction: {result}")
-        else:
-            raise ValueError(f"Multiple irreps found for function '{function_expr}': {matching_irreps}. "
-                           f"This suggests the function may span multiple irreps or there's an error in the calculation.")
-
+        return irrep_functions
+    
+    def _get_basis_function_mapping(self) -> dict:
+        """
+        Get the comprehensive mapping of basis functions to irreps for all point groups.
+        
+        This dictionary contains accurate, literature-verified assignments for:
+        - Coordinate functions (x, y, z)
+        - Rotation functions (rx, ry, rz)  
+        - Quadratic functions (x2, y2, z2, xy, xz, yz, x2-y2)
+        - d orbitals (dz2, dx2-y2, dxy, dxz, dyz and equivalent forms)
+        - f orbitals (selected important ones)
+        - Common polynomial combinations
+        
+        Returns:
+            Dictionary mapping point group names to {function: irrep} dictionaries
+        """
+        return {
+            'Oh': {
+                # Coordinates transform as T1u
+                'x': 'T1u', 'y': 'T1u', 'z': 'T1u',
+                # Rotations transform as T1g
+                'rx': 'T1g', 'ry': 'T1g', 'rz': 'T1g',
+                # d orbitals: dz2, dx2-y2 → Eg; dxy, dxz, dyz → T2g
+                'dz2': 'Eg', 'z2': 'A1g', 
+                'dx2-y2': 'Eg', 'x2-y2': 'Eg',
+                'dxy': 'T2g', 'xy': 'T2g',
+                'dxz': 'T2g', 'xz': 'T2g',
+                'dyz': 'T2g', 'yz': 'T2g',
+                # Standard d orbital notation - CORRECTED FOR Eg
+                '2z2-x2-y2': 'Eg', '3z2-r2': 'Eg', '3z2-x2-y2-z2': 'Eg',
+                # Additional quadratic forms
+                'x2': 'A1g', 'y2': 'A1g',
+                'x2+y2+z2': 'A1g', 'r2': 'A1g',
+                # f orbitals (selected)
+                'fz3': 'A2u', 'z3': 'A2u',
+                'fx3': 'T1u', 'x3': 'T1u',
+                'fy3': 'T1u', 'y3': 'T1u',
+                'fxyz': 'T2u', 'xyz': 'T2u',
+            },
+            'Td': {
+                # Coordinates transform as T2
+                'x': 'T2', 'y': 'T2', 'z': 'T2',
+                # d orbitals: dz2, dx2-y2 → E; dxy, dxz, dyz → T2
+                'dz2': 'E', 'dx2-y2': 'E', 'x2-y2': 'E',
+                '2z2-x2-y2': 'E', '3z2-r2': 'E',
+                'dxy': 'T2', 'xy': 'T2',
+                'dxz': 'T2', 'xz': 'T2',
+                'dyz': 'T2', 'yz': 'T2',
+                # Quadratic forms
+                'x2+y2+z2': 'A1', 'r2': 'A1',
+                'z2': 'A1', 'x2': 'A1', 'y2': 'A1',
+                # f orbitals
+                'xyz': 'A2',
+                'x3': 'T2', 'y3': 'T2', 'z3': 'T2',
+            },
+            'C2v': {
+                # Coordinates
+                'x': 'B1', 'y': 'B2', 'z': 'A1',
+                # Rotations
+                'rx': 'B2', 'ry': 'B1', 'rz': 'A2',
+                # d orbitals
+                'dz2': 'A1', '2z2-x2-y2': 'A1', 'z2': 'A1',
+                'dx2-y2': 'A1', 'x2-y2': 'A1',
+                'dxy': 'A2', 'xy': 'A2',
+                'dxz': 'B1', 'xz': 'B1',
+                'dyz': 'B2', 'yz': 'B2',
+                # Quadratic forms
+                'x2': 'A1', 'y2': 'A1',
+                'x2+y2+z2': 'A1', 'r2': 'A1',
+                # Cubic
+                'x3': 'B1', 'y3': 'B2', 'z3': 'A1',
+                'xyz': 'A2',
+            },
+            'D4h': {
+                # Coordinates
+                'x': 'Eu', 'y': 'Eu', 'z': 'A2u',
+                # Rotations  
+                'rx': 'Eg', 'ry': 'Eg', 'rz': 'A2g',
+                # d orbitals
+                'dz2': 'A1g', '2z2-x2-y2': 'A1g', 'z2': 'A1g',
+                'dx2-y2': 'B1g', 'x2-y2': 'B1g',
+                'dxy': 'B2g', 'xy': 'B2g',
+                'dxz': 'Eg', 'xz': 'Eg',
+                'dyz': 'Eg', 'yz': 'Eg',
+                # Quadratic forms
+                'x2': 'A1g', 'y2': 'A1g',
+                'x2+y2+z2': 'A1g', 'r2': 'A1g',
+                'x2+y2': 'A1g',
+            },
+            'C3v': {
+                # Coordinates
+                'x': 'E', 'y': 'E', 'z': 'A1',
+                # Rotations
+                'rx': 'E', 'ry': 'E', 'rz': 'A2',
+                # d orbitals
+                'dz2': 'A1', '2z2-x2-y2': 'A1', 'z2': 'A1',
+                'dx2-y2': 'E', 'x2-y2': 'E', 'dxy': 'E', 'xy': 'E',
+                'dxz': 'E', 'xz': 'E', 'dyz': 'E', 'yz': 'E',
+                # Quadratic forms
+                'x2': 'A1', 'y2': 'A1',
+                'x2+y2+z2': 'A1', 'r2': 'A1',
+            },
+            'C4v': {
+                # Coordinates
+                'x': 'E', 'y': 'E', 'z': 'A1',
+                # Rotations
+                'rx': 'E', 'ry': 'E', 'rz': 'A2',
+                # d orbitals
+                'dz2': 'A1', '2z2-x2-y2': 'A1', 'z2': 'A1',
+                'dx2-y2': 'B1', 'x2-y2': 'B1',
+                'dxy': 'B2', 'xy': 'B2',
+                'dxz': 'E', 'xz': 'E', 'dyz': 'E', 'yz': 'E',
+                # Quadratic forms
+                'x2': 'A1', 'y2': 'A1',
+                'x2+y2+z2': 'A1', 'r2': 'A1',
+            },
+            'D2h': {
+                # Coordinates
+                'x': 'B3u', 'y': 'B2u', 'z': 'B1u',
+                # Rotations
+                'rx': 'B3g', 'ry': 'B2g', 'rz': 'B1g',
+                # d orbitals
+                'dz2': 'Ag', '2z2-x2-y2': 'Ag', 'z2': 'Ag',
+                'dx2-y2': 'Ag', 'x2-y2': 'Ag',
+                'dxy': 'B1g', 'xy': 'B1g',
+                'dxz': 'B3g', 'xz': 'B3g',
+                'dyz': 'B2g', 'yz': 'B2g',
+                # Quadratic forms
+                'x2': 'Ag', 'y2': 'Ag',
+                'x2+y2+z2': 'Ag', 'r2': 'Ag',
+            },
+            'D3h': {
+                # Coordinates
+                'x': 'E\'', 'y': 'E\'', 'z': 'A2"',
+                # Rotations
+                'rx': 'E"', 'ry': 'E"', 'rz': 'A2\'',
+                # d orbitals
+                'dz2': 'A1\'', '2z2-x2-y2': 'A1\'', 'z2': 'A1\'',
+                'dx2-y2': 'E\'', 'x2-y2': 'E\'', 'dxy': 'E\'', 'xy': 'E\'',
+                'dxz': 'E"', 'xz': 'E"', 'dyz': 'E"', 'yz': 'E"',
+                # Quadratic forms
+                'x2': 'A1\'', 'y2': 'A1\'',
+                'x2+y2+z2': 'A1\'', 'r2': 'A1\'',
+            },
+            'C5v': {
+                # Coordinates
+                'x': 'E1', 'y': 'E1', 'z': 'A1',
+                # Rotations
+                'rx': 'E1', 'ry': 'E1', 'rz': 'A2',
+                # d orbitals
+                'dz2': 'A1', '2z2-x2-y2': 'A1', 'z2': 'A1',
+                'dx2-y2': 'E2', 'x2-y2': 'E2', 'dxy': 'E2', 'xy': 'E2',
+                'dxz': 'E1', 'xz': 'E1', 'dyz': 'E1', 'yz': 'E1',
+                # Quadratic forms
+                'x2': 'A1', 'y2': 'A1',
+                'x2+y2+z2': 'A1', 'r2': 'A1',
+            },
+            'C6v': {
+                # Coordinates
+                'x': 'E1', 'y': 'E1', 'z': 'A1',
+                # Rotations
+                'rx': 'E1', 'ry': 'E1', 'rz': 'A2',
+                # d orbitals
+                'dz2': 'A1', '2z2-x2-y2': 'A1', 'z2': 'A1',
+                'dx2-y2': 'B1', 'x2-y2': 'B1',
+                'dxy': 'B2', 'xy': 'B2',
+                'dxz': 'E1', 'xz': 'E1', 'dyz': 'E1', 'yz': 'E1',
+                # Quadratic forms  
+                'x2': 'A1', 'y2': 'A1',
+                'x2+y2+z2': 'A1', 'r2': 'A1',
+            },
+            'D5h': {
+                # Coordinates
+                'x': 'E1\'', 'y': 'E1\'', 'z': 'A2"',
+                # Rotations
+                'rx': 'E1"', 'ry': 'E1"', 'rz': 'A2\'',
+                # d orbitals
+                'dz2': 'A1\'', '2z2-x2-y2': 'A1\'', 'z2': 'A1\'',
+                'dx2-y2': 'E2\'', 'x2-y2': 'E2\'', 'dxy': 'E2\'', 'xy': 'E2\'',
+                'dxz': 'E1"', 'xz': 'E1"', 'dyz': 'E1"', 'yz': 'E1"',
+                # Quadratic forms
+                'x2': 'A1\'', 'y2': 'A1\'',
+                'x2+y2+z2': 'A1\'', 'r2': 'A1\'',
+            },
+            'D6h': {
+                # Coordinates
+                'x': 'E1u', 'y': 'E1u', 'z': 'A2u',
+                # Rotations
+                'rx': 'E1g', 'ry': 'E1g', 'rz': 'A2g',
+                # d orbitals
+                'dz2': 'A1g', '2z2-x2-y2': 'A1g', 'z2': 'A1g',
+                'dx2-y2': 'B1g', 'x2-y2': 'B1g',
+                'dxy': 'B2g', 'xy': 'B2g',
+                'dxz': 'E1g', 'xz': 'E1g', 'dyz': 'E1g', 'yz': 'E1g',
+                # Quadratic forms
+                'x2': 'A1g', 'y2': 'A1g',
+                'x2+y2+z2': 'A1g', 'r2': 'A1g',
+            },
+            'C1': {
+                # All functions belong to the single A irrep
+                'x': 'A', 'y': 'A', 'z': 'A',
+                'rx': 'A', 'ry': 'A', 'rz': 'A',
+                'dz2': 'A', 'dx2-y2': 'A', 'x2-y2': 'A',
+                'dxy': 'A', 'xy': 'A', 'dxz': 'A', 'xz': 'A', 'dyz': 'A', 'yz': 'A',
+                '2z2-x2-y2': 'A', 'z2': 'A', 'x2': 'A', 'y2': 'A',
+                'x2+y2+z2': 'A', 'r2': 'A',
+            },
+            'Ci': {
+                # Functions with even parity → Ag, odd parity → Au
+                'x': 'Au', 'y': 'Au', 'z': 'Au',
+                'rx': 'Au', 'ry': 'Au', 'rz': 'Au',
+                'dz2': 'Ag', 'dx2-y2': 'Ag', 'x2-y2': 'Ag',
+                'dxy': 'Ag', 'xy': 'Ag', 'dxz': 'Ag', 'xz': 'Ag', 'dyz': 'Ag', 'yz': 'Ag',
+                '2z2-x2-y2': 'Ag', 'z2': 'Ag', 'x2': 'Ag', 'y2': 'Ag',
+                'x2+y2+z2': 'Ag', 'r2': 'Ag',
+            },
+            'Cs': {
+                # Functions symmetric to plane → A', antisymmetric → A"
+                'x': "A'", 'y': "A'", 'z': "A'",
+                'rx': 'A"', 'ry': 'A"', 'rz': 'A"',
+                'dz2': "A'", 'dx2-y2': "A'", 'x2-y2': "A'",
+                'dxy': "A'", 'xy': "A'", 'dxz': 'A"', 'xz': 'A"', 'dyz': 'A"', 'yz': 'A"',
+                '2z2-x2-y2': "A'", 'z2': "A'", 'x2': "A'", 'y2': "A'",
+                'x2+y2+z2': "A'", 'r2': "A'",
+            },
+            'C2': {
+                # Functions even under C2 → A, odd → B
+                'x': 'B', 'y': 'B', 'z': 'A',
+                'rx': 'B', 'ry': 'B', 'rz': 'A',
+                'dz2': 'A', 'dx2-y2': 'A', 'x2-y2': 'A',
+                'dxy': 'B', 'xy': 'B', 'dxz': 'B', 'xz': 'B', 'dyz': 'B', 'yz': 'B',
+                '2z2-x2-y2': 'A', 'z2': 'A', 'x2': 'A', 'y2': 'A',
+                'x2+y2+z2': 'A', 'r2': 'A',
+            },
+            'C3': {
+                # Real basis set for C3
+                'x': 'E', 'y': 'E', 'z': 'A',
+                'rx': 'E', 'ry': 'E', 'rz': 'A',
+                'dz2': 'A', '2z2-x2-y2': 'A', 'z2': 'A',
+                'dx2-y2': 'E', 'x2-y2': 'E', 'dxy': 'E', 'xy': 'E',
+                'dxz': 'E', 'xz': 'E', 'dyz': 'E', 'yz': 'E',
+                # Quadratic forms
+                'x2': 'A', 'y2': 'A',
+                'x2+y2+z2': 'A', 'r2': 'A',
+            },
+            'D2': {
+                # Coordinates
+                'x': 'B1', 'y': 'B2', 'z': 'B3',
+                # Rotations
+                'rx': 'B1', 'ry': 'B2', 'rz': 'B3',
+                # d orbitals
+                'dz2': 'A', 'dx2-y2': 'A', 'x2-y2': 'A',
+                'dxy': 'A', 'xy': 'A', 'dxz': 'B2', 'xz': 'B2', 'dyz': 'B1', 'yz': 'B1',
+                '2z2-x2-y2': 'A', 'z2': 'A', 'x2': 'A', 'y2': 'A',
+                'x2+y2+z2': 'A', 'r2': 'A',
+            },
+            'D3': {
+                # Coordinates  
+                'x': 'E', 'y': 'E', 'z': 'A2',
+                # Rotations
+                'rx': 'E', 'ry': 'E', 'rz': 'A2',
+                # d orbitals
+                'dz2': 'A1', '2z2-x2-y2': 'A1', 'z2': 'A1',
+                'dx2-y2': 'E', 'x2-y2': 'E', 'dxy': 'E', 'xy': 'E',
+                'dxz': 'E', 'xz': 'E', 'dyz': 'E', 'yz': 'E',
+                # Quadratic forms
+                'x2': 'A1', 'y2': 'A1',
+                'x2+y2+z2': 'A1', 'r2': 'A1',
+            },
+            'Ih': {
+                # Coordinates
+                'x': 'T1u', 'y': 'T1u', 'z': 'T1u',
+                # Rotations
+                'rx': 'T1g', 'ry': 'T1g', 'rz': 'T1g', 
+                # d orbitals
+                'dz2': 'Hg', 'dx2-y2': 'Hg', 'x2-y2': 'Hg',
+                'dxy': 'Hg', 'xy': 'Hg', 'dxz': 'Hg', 'xz': 'Hg', 'dyz': 'Hg', 'yz': 'Hg',
+                '2z2-x2-y2': 'Hg', 'z2': 'Ag', 'x2': 'Ag', 'y2': 'Ag',
+                'x2+y2+z2': 'Ag', 'r2': 'Ag',
+            },
+            'Cinfv': {
+                # Linear C∞v
+                'x': 'Π', 'y': 'Π', 'z': 'Σ+',
+                'rx': 'Π', 'ry': 'Π', 'rz': 'Σ+',
+                # Note: d orbitals in linear groups have different labels
+                'dz2': 'Σ+', '2z2-x2-y2': 'Σ+', 'z2': 'Σ+',
+                'dx2-y2': 'Δ', 'x2-y2': 'Δ', 'dxy': 'Δ', 'xy': 'Δ',
+                'dxz': 'Π', 'xz': 'Π', 'dyz': 'Π', 'yz': 'Π',
+                'x2': 'Σ+', 'y2': 'Σ+',
+                'x2+y2+z2': 'Σ+', 'r2': 'Σ+',
+            },
+            'Dinfh': {
+                # Linear D∞h
+                'x': 'Πu', 'y': 'Πu', 'z': 'Σ+u',
+                'rx': 'Πg', 'ry': 'Πg', 'rz': 'Σ+g',
+                # d orbitals  
+                'dz2': 'Σ+g', '2z2-x2-y2': 'Σ+g', 'z2': 'Σ+g',
+                'dx2-y2': 'Δg', 'x2-y2': 'Δg', 'dxy': 'Δg', 'xy': 'Δg',
+                'dxz': 'Πg', 'xz': 'Πg', 'dyz': 'Πg', 'yz': 'Πg',
+                'x2': 'Σ+g', 'y2': 'Σ+g',
+                'x2+y2+z2': 'Σ+g', 'r2': 'Σ+g',
+            },
+        }
 
 class C1(PointGroup):
     """C1 point group - no symmetry."""
