@@ -310,6 +310,66 @@ class PointGroup(ABC):
         else:
             raise ValueError(f"Basis function '{function_expr}' not recognized")
     
+    def _get_transformation_matrix(self, operation_type: str):
+        """
+        Get the 3x3 transformation matrix for a symmetry operation.
+        
+        Returns the matrix that transforms coordinates: [x', y', z'] = M * [x, y, z]
+        """
+        import numpy as np
+        
+        op = operation_type.strip()
+        
+        if op == 'E':  # Identity
+            return np.eye(3)
+        
+        # C2 rotations
+        elif op == 'C2' or op.startswith('C2z'):  # C2 around z
+            return np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+        elif op.startswith('C2x'):  # C2 around x
+            return np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
+        elif op.startswith('C2y'):  # C2 around y
+            return np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])
+        elif op == "C2'" or 'C2' in op:  # Generic C2 
+            return np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+            
+        # C3 rotations (120°)
+        elif op.startswith('C3'):
+            cos_120 = -0.5
+            sin_120 = 0.866025
+            return np.array([[cos_120, -sin_120, 0], [sin_120, cos_120, 0], [0, 0, 1]])
+            
+        # C4 rotations (90°)
+        elif op.startswith('C4'):
+            return np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+            
+        # Inversion
+        elif op == 'i':
+            return np.array([[-1, 0, 0], [0, -1, 0], [0, 0, -1]])
+            
+        # Mirror planes
+        elif op.startswith('σ'):
+            if 'h' in op:  # Horizontal (xy plane)
+                return np.array([[1, 0, 0], [0, 1, 0], [0, 0, -1]])
+            elif 'v' in op:  # Vertical - assume xz plane
+                return np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
+            elif 'd' in op:  # Dihedral - assume x=y plane
+                return np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
+            else:  # Generic mirror - assume xz plane
+                return np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
+                
+        # Improper rotations
+        elif op.startswith('S4'):  # S4 = C4 + i
+            return np.array([[0, 1, 0], [-1, 0, 0], [0, 0, -1]])
+        elif op.startswith('S6'):  # S6 = C6 + i  
+            cos_60 = 0.5
+            sin_60 = 0.866025
+            return np.array([[-cos_60, sin_60, 0], [-sin_60, -cos_60, 0], [0, 0, -1]])
+        
+        else:
+            # Default: identity
+            return np.eye(3)
+
     def identify_basis_function(self, function_expr: str, tolerance: float = 1e-8) -> str:
         """
         Algorithmically determine which irreducible representation a basis function belongs to.
@@ -331,29 +391,45 @@ class PointGroup(ABC):
             >>> c2v.identify_basis_function('z2')
             'A1'
         """
-        # Use a single general test point (not on any symmetry elements)
-        x, y, z = 1.1, 1.3, 0.9
+        import numpy as np
         
+        func = function_expr.lower().strip()
         characters = []
         
-        for class_name in self.classes:
-            # Calculate how the function transforms under this symmetry operation
-            original_value = self._evaluate_basis_function(function_expr, x, y, z)
+        # Special handling for coordinate functions x, y, z
+        if func in ['x', 'y', 'z']:
+            coord_index = {'x': 0, 'y': 1, 'z': 2}[func]
             
-            # Transform coordinates under this symmetry operation
-            x_prime, y_prime, z_prime = self._transform_coordinates(class_name, x, y, z)
+            for class_name in self.classes:
+                # Get transformation matrix for this operation
+                matrix = self._get_transformation_matrix(class_name)
+                
+                # The character is the diagonal element for this coordinate
+                char = matrix[coord_index, coord_index]
+                characters.append(char)
+        
+        else:
+            # For other functions, use the original point-evaluation method
+            x, y, z = 1.1, 1.3, 0.9
             
-            # Evaluate function at transformed coordinates
-            transformed_value = self._evaluate_basis_function(function_expr, x_prime, y_prime, z_prime)
-            
-            # Calculate the character (transformation coefficient)
-            if abs(original_value) > tolerance:
-                char = transformed_value / original_value
-            else:
-                # Handle case where original function value is zero
-                char = 1.0 if abs(transformed_value) < tolerance else 0.0
-            
-            characters.append(round(char, 6))
+            for class_name in self.classes:
+                # Calculate how the function transforms under this symmetry operation
+                original_value = self._evaluate_basis_function(function_expr, x, y, z)
+                
+                # Transform coordinates under this symmetry operation
+                x_prime, y_prime, z_prime = self._transform_coordinates(class_name, x, y, z)
+                
+                # Evaluate function at transformed coordinates
+                transformed_value = self._evaluate_basis_function(function_expr, x_prime, y_prime, z_prime)
+                
+                # Calculate the character (transformation coefficient)
+                if abs(original_value) > tolerance:
+                    char = transformed_value / original_value
+                else:
+                    # Handle case where original function value is zero
+                    char = 1.0 if abs(transformed_value) < tolerance else 0.0
+                
+                characters.append(round(char, 6))
         
         # Reduce this representation to find which irrep it matches
         result = self.reduce_representation(characters)
