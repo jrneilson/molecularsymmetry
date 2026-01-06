@@ -1034,6 +1034,123 @@ class C3(PointGroup):
         }
 
 
+class C4(PointGroup):
+    """C4 point group - four-fold rotation axis."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C4"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        self.classes = ['E', 'C4', 'C2', 'C4³']
+        self.class_sizes = [1, 1, 1, 1]
+        self.order = 4
+        self.irreps = {
+            'A': [1, 1, 1, 1],
+            'B': [1, -1, 1, -1],
+            'E': [2, 0, -2, 0]
+        }
+
+
+class C5(PointGroup):
+    """C5 point group - five-fold rotation axis."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C5"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        # ε = e^(2πi/5)
+        ε = np.exp(2j * np.pi / 5)
+        self.classes = ['E', 'C5', 'C5²', 'C5³', 'C5⁴']
+        self.class_sizes = [1, 1, 1, 1, 1]
+        self.order = 5
+        self.irreps = {
+            'A': [1, 1, 1, 1, 1],
+            'E1a': [1, ε, ε**2, ε**3, ε**4],
+            'E1b': [1, ε.conjugate(), (ε**2).conjugate(), (ε**3).conjugate(), (ε**4).conjugate()],
+            'E2a': [1, ε**2, ε**4, ε, ε**3],
+            'E2b': [1, (ε**2).conjugate(), (ε**4).conjugate(), ε.conjugate(), (ε**3).conjugate()]
+        }
+
+
+class C6(PointGroup):
+    """C6 point group - six-fold rotation axis."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C6"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        # ε = e^(2πi/6) = e^(πi/3)
+        ε = np.exp(1j * np.pi / 3)
+        self.classes = ['E', 'C6', 'C3', 'C2', 'C3²', 'C6⁵']
+        self.class_sizes = [1, 1, 1, 1, 1, 1]
+        self.order = 6
+        self.irreps = {
+            'A': [1, 1, 1, 1, 1, 1],
+            'B': [1, -1, 1, -1, 1, -1],
+            'E1': [2, 1, -1, -2, -1, 1],
+            'E2': [2, -1, -1, 2, -1, -1]
+        }
+
+
+class C7(PointGroup):
+    """C7 point group - seven-fold rotation axis."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C7"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        # ε = e^(2πi/7)
+        ε = np.exp(2j * np.pi / 7)
+        self.classes = ['E', 'C7', 'C7²', 'C7³', 'C7⁴', 'C7⁵', 'C7⁶']
+        self.class_sizes = [1, 1, 1, 1, 1, 1, 1]
+        self.order = 7
+        self.irreps = {
+            'A': [1, 1, 1, 1, 1, 1, 1],
+            'E1a': [1, ε, ε**2, ε**3, ε**4, ε**5, ε**6],
+            'E1b': [1, ε.conjugate(), (ε**2).conjugate(), (ε**3).conjugate(), (ε**4).conjugate(), (ε**5).conjugate(), (ε**6).conjugate()],
+            'E2a': [1, ε**2, ε**4, ε**6, ε, ε**3, ε**5],
+            'E2b': [1, (ε**2).conjugate(), (ε**4).conjugate(), (ε**6).conjugate(), ε.conjugate(), (ε**3).conjugate(), (ε**5).conjugate()],
+            'E3a': [1, ε**3, ε**6, ε**2, ε**5, ε, ε**4],
+            'E3b': [1, (ε**3).conjugate(), (ε**6).conjugate(), (ε**2).conjugate(), (ε**5).conjugate(), ε.conjugate(), (ε**4).conjugate()]
+        }
+
+
+class C8(PointGroup):
+    """C8 point group - eight-fold rotation axis."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C8"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        # ε = e^(2πi/8) = e^(πi/4)
+        ε = np.exp(1j * np.pi / 4)
+        self.classes = ['E', 'C8', 'C4', 'C8³', 'C2', 'C8⁵', 'C4³', 'C8⁷']
+        self.class_sizes = [1, 1, 1, 1, 1, 1, 1, 1]
+        self.order = 8
+        self.irreps = {
+            'A': [1, 1, 1, 1, 1, 1, 1, 1],
+            'B': [1, -1, 1, -1, 1, -1, 1, -1],
+            'E1': [2, np.sqrt(2), 0, -np.sqrt(2), -2, -np.sqrt(2), 0, np.sqrt(2)],
+            'E2': [2, 0, -2, 0, 2, 0, -2, 0],
+            'E3': [2, -np.sqrt(2), 0, np.sqrt(2), -2, np.sqrt(2), 0, -np.sqrt(2)]
+        }
+
+
 class C2v(PointGroup):
     """C2v point group - two-fold axis with two vertical mirror planes."""
     
@@ -1138,6 +1255,122 @@ class C6v(PointGroup):
         }
 
 
+class C2h(PointGroup):
+    """C2h point group - two-fold axis with horizontal mirror plane."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C2h"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        self.classes = ['E', 'C2', 'i', 'σh']
+        self.class_sizes = [1, 1, 1, 1]
+        self.order = 4
+        self.irreps = {
+            'Ag': [1, 1, 1, 1],
+            'Bg': [1, -1, 1, -1],
+            'Au': [1, 1, -1, -1],
+            'Bu': [1, -1, -1, 1]
+        }
+
+
+class C3h(PointGroup):
+    """C3h point group - three-fold axis with horizontal mirror plane."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C3h"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        # ε = e^(2πi/3)
+        ε = np.exp(2j * np.pi / 3)
+        self.classes = ['E', 'C3', 'σh']
+        self.class_sizes = [1, 2, 3]
+        self.order = 6
+        self.irreps = {
+            "A'": [1, 1, 1],
+            'A"': [1, 1, -1],
+            "E'": [2, -1, 0],
+            'E"': [2, -1, 0]
+        }
+
+
+class C4h(PointGroup):
+    """C4h point group - four-fold axis with horizontal mirror plane."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C4h"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        self.classes = ['E', 'C4', 'C2', 'C4³', 'i', 'S4³', 'σh', 'S4']
+        self.class_sizes = [1, 1, 1, 1, 1, 1, 1, 1]
+        self.order = 8
+        self.irreps = {
+            'Ag': [1, 1, 1, 1, 1, 1, 1, 1],
+            'Bg': [1, -1, 1, -1, 1, -1, 1, -1],
+            'Eg': [2, 0, -2, 0, 2, 0, -2, 0],
+            'Au': [1, 1, 1, 1, -1, -1, -1, -1],
+            'Bu': [1, -1, 1, -1, -1, 1, -1, 1],
+            'Eu': [2, 0, -2, 0, -2, 0, 2, 0]
+        }
+
+
+class C5h(PointGroup):
+    """C5h point group - five-fold axis with horizontal mirror plane."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C5h"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        # ε = e^(2πi/5)
+        ε = np.exp(2j * np.pi / 5)
+        self.classes = ['E', 'C5', 'C5²', 'C5³', 'C5⁴', 'σh', 'S5', 'S5³', 'S5²', 'S5⁴']
+        self.class_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        self.order = 10
+        self.irreps = {
+            "A'": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            'A"': [1, 1, 1, 1, 1, -1, -1, -1, -1, -1],
+            "E1'": [2, 2*np.cos(2*np.pi/5), 2*np.cos(4*np.pi/5), 2*np.cos(4*np.pi/5), 2*np.cos(2*np.pi/5), 2, 2*np.cos(2*np.pi/5), 2*np.cos(4*np.pi/5), 2*np.cos(4*np.pi/5), 2*np.cos(2*np.pi/5)],
+            'E1"': [2, 2*np.cos(2*np.pi/5), 2*np.cos(4*np.pi/5), 2*np.cos(4*np.pi/5), 2*np.cos(2*np.pi/5), -2, -2*np.cos(2*np.pi/5), -2*np.cos(4*np.pi/5), -2*np.cos(4*np.pi/5), -2*np.cos(2*np.pi/5)],
+            "E2'": [2, 2*np.cos(4*np.pi/5), 2*np.cos(2*np.pi/5), 2*np.cos(2*np.pi/5), 2*np.cos(4*np.pi/5), 2, 2*np.cos(4*np.pi/5), 2*np.cos(2*np.pi/5), 2*np.cos(2*np.pi/5), 2*np.cos(4*np.pi/5)],
+            'E2"': [2, 2*np.cos(4*np.pi/5), 2*np.cos(2*np.pi/5), 2*np.cos(2*np.pi/5), 2*np.cos(4*np.pi/5), -2, -2*np.cos(4*np.pi/5), -2*np.cos(2*np.pi/5), -2*np.cos(2*np.pi/5), -2*np.cos(4*np.pi/5)]
+        }
+
+
+class C6h(PointGroup):
+    """C6h point group - six-fold axis with horizontal mirror plane."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "C6h"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        self.classes = ['E', 'C6', 'C3', 'C2', 'C3²', 'C6⁵', 'i', 'S3⁵', 'S6⁵', 'σh', 'S6', 'S3']
+        self.class_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        self.order = 12
+        self.irreps = {
+            'Ag': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            'Bg': [1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1],
+            'E1g': [2, 1, -1, -2, -1, 1, 2, 1, -1, -2, -1, 1],
+            'E2g': [2, -1, -1, 2, -1, -1, 2, -1, -1, 2, -1, -1],
+            'Au': [1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1],
+            'Bu': [1, -1, 1, -1, 1, -1, -1, 1, -1, 1, -1, 1],
+            'E1u': [2, 1, -1, -2, -1, 1, -2, -1, 1, 2, 1, -1],
+            'E2u': [2, -1, -1, 2, -1, -1, -2, 1, 1, -2, 1, 1]
+        }
+
+
 class D2(PointGroup):
     """D2 point group - three perpendicular two-fold axes."""
     
@@ -1198,6 +1431,48 @@ class D3(PointGroup):
             'A1': [1, 1, 1],
             'A2': [1, 1, -1],
             'E': [2, -1, 0]
+        }
+
+
+class D4(PointGroup):
+    """D4 point group - four-fold axis with perpendicular two-fold axes."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D4"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        self.classes = ['E', 'C4', 'C2', 'C2\'', 'C2"']
+        self.class_sizes = [1, 2, 1, 2, 2]
+        self.order = 8
+        self.irreps = {
+            'A1': [1, 1, 1, 1, 1],
+            'A2': [1, 1, 1, -1, -1],
+            'B1': [1, -1, 1, 1, -1],
+            'B2': [1, -1, 1, -1, 1],
+            'E': [2, 0, -2, 0, 0]
+        }
+
+
+class D5(PointGroup):
+    """D5 point group - five-fold axis with perpendicular two-fold axes."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D5"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        self.classes = ['E', 'C5', 'C5²', 'C2']
+        self.class_sizes = [1, 2, 2, 5]
+        self.order = 10
+        self.irreps = {
+            'A1': [1, 1, 1, 1],
+            'A2': [1, 1, 1, -1],
+            'E1': [2, 2*np.cos(2*np.pi/5), 2*np.cos(4*np.pi/5), 0],
+            'E2': [2, 2*np.cos(4*np.pi/5), 2*np.cos(2*np.pi/5), 0]
         }
 
 
@@ -1303,6 +1578,279 @@ class D6h(PointGroup):
             'B2u': [1, -1, 1, -1, -1, 1, -1, 1, -1, 1, 1, -1],
             'E1u': [2, 1, -1, -2, 0, 0, -2, -1, 1, 2, 0, 0],
             'E2u': [2, -1, -1, 2, 0, 0, -2, 1, 1, -2, 0, 0]
+        }
+
+
+class D2d(PointGroup):
+    """D2d point group - D2 with dihedral planes."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D2d"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        self.classes = ['E', 'C2', 'C2\'', 'S4', 'σd']
+        self.class_sizes = [1, 1, 2, 2, 2]
+        self.order = 8
+        self.irreps = {
+            'A1': [1, 1, 1, 1, 1],
+            'A2': [1, 1, 1, -1, -1],
+            'B1': [1, 1, -1, 1, -1],
+            'B2': [1, 1, -1, -1, 1],
+            'E': [2, -2, 0, 0, 0]
+        }
+
+
+class D3d(PointGroup):
+    """D3d point group - D3 with dihedral planes."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D3d"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        self.classes = ['E', 'C3', 'C2', 'i', 'S6', 'σd']
+        self.class_sizes = [1, 2, 3, 1, 2, 3]
+        self.order = 12
+        self.irreps = {
+            'A1g': [1, 1, 1, 1, 1, 1],
+            'A2g': [1, 1, -1, 1, 1, -1],
+            'Eg': [2, -1, 0, 2, -1, 0],
+            'A1u': [1, 1, 1, -1, -1, -1],
+            'A2u': [1, 1, -1, -1, -1, 1],
+            'Eu': [2, -1, 0, -2, 1, 0]
+        }
+
+
+class D4d(PointGroup):
+    """D4d point group - D4 with dihedral planes."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D4d"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        self.classes = ['E', 'C4', 'C2', 'C2\'', 'C2"', 'S8', 'σd']
+        self.class_sizes = [1, 2, 1, 2, 2, 2, 4]
+        self.order = 16
+        self.irreps = {
+            'A1': [1, 1, 1, 1, 1, 1, 1],
+            'A2': [1, 1, 1, -1, -1, 1, -1],
+            'B1': [1, -1, 1, 1, -1, -1, 1],
+            'B2': [1, -1, 1, -1, 1, -1, -1],
+            'E1': [2, 0, -2, 0, 0, np.sqrt(2), 0],
+            'E2': [2, 0, -2, 0, 0, -np.sqrt(2), 0],
+            'E3': [2, np.sqrt(2), 0, 0, 0, 0, 0]
+        }
+
+
+class D5d(PointGroup):
+    """D5d point group - D5 with dihedral planes."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D5d"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        cos72 = np.cos(2*np.pi/5)  # cos(72°)
+        cos144 = np.cos(4*np.pi/5)  # cos(144°)
+        self.classes = ['E', 'C5', 'C5²', 'C2', 'i', 'S10', 'S10³', 'σd']
+        self.class_sizes = [1, 2, 2, 5, 1, 2, 2, 5]
+        self.order = 20
+        self.irreps = {
+            'A1g': [1, 1, 1, 1, 1, 1, 1, 1],
+            'A2g': [1, 1, 1, -1, 1, 1, 1, -1],
+            'E1g': [2, 2*cos72, 2*cos144, 0, 2, 2*cos72, 2*cos144, 0],
+            'E2g': [2, 2*cos144, 2*cos72, 0, 2, 2*cos144, 2*cos72, 0],
+            'A1u': [1, 1, 1, 1, -1, -1, -1, -1],
+            'A2u': [1, 1, 1, -1, -1, -1, -1, 1],
+            'E1u': [2, 2*cos72, 2*cos144, 0, -2, -2*cos72, -2*cos144, 0],
+            'E2u': [2, 2*cos144, 2*cos72, 0, -2, -2*cos144, -2*cos72, 0]
+        }
+
+
+class D6d(PointGroup):
+    """D6d point group - D6 with dihedral planes."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D6d"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        self.classes = ['E', 'C6', 'C3', 'C2', 'C2\'', 'C2"', 'S12', 'S4', 'σd']
+        self.class_sizes = [1, 2, 2, 1, 3, 3, 2, 2, 6]
+        self.order = 24
+        self.irreps = {
+            'A1': [1, 1, 1, 1, 1, 1, 1, 1, 1],
+            'A2': [1, 1, 1, 1, -1, -1, 1, 1, -1],
+            'B1': [1, -1, 1, -1, 1, -1, -1, 1, -1],
+            'B2': [1, -1, 1, -1, -1, 1, -1, 1, 1],
+            'E1': [2, 1, -1, -2, 0, 0, 1, 0, 0],
+            'E2': [2, -1, -1, 2, 0, 0, -1, 0, 0],
+            'E3': [2, np.sqrt(3), 0, 0, 0, 0, -np.sqrt(3), 0, 0],
+            'E4': [2, 0, -2, 0, 0, 0, 0, -2, 0],
+            'E5': [2, -np.sqrt(3), 0, 0, 0, 0, np.sqrt(3), 0, 0]
+        }
+
+
+class S4(PointGroup):
+    """S4 point group - four-fold improper rotation axis."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "S4"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        self.classes = ['E', 'S4', 'C2', 'S4³']
+        self.class_sizes = [1, 1, 1, 1]
+        self.order = 4
+        self.irreps = {
+            'A': [1, 1, 1, 1],
+            'B': [1, -1, 1, -1],
+            'E': [2, 0, -2, 0]
+        }
+
+
+class S6(PointGroup):
+    """S6 point group - six-fold improper rotation axis."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "S6"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        # ε = e^(2πi/3)
+        ε = np.exp(2j * np.pi / 3)
+        self.classes = ['E', 'C3', 'C3²', 'i', 'S6⁵', 'S6']
+        self.class_sizes = [1, 1, 1, 1, 1, 1]
+        self.order = 6
+        self.irreps = {
+            'Ag': [1, 1, 1, 1, 1, 1],
+            'Eg': [2, -1, -1, 2, -1, -1],
+            'Au': [1, 1, 1, -1, -1, -1],
+            'Eu': [2, -1, -1, -2, 1, 1]
+        }
+
+
+class S8(PointGroup):
+    """S8 point group - eight-fold improper rotation axis."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "S8"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        self.classes = ['E', 'S8', 'C4', 'S8³', 'C2', 'S8⁵', 'C4³', 'S8⁷']
+        self.class_sizes = [1, 1, 1, 1, 1, 1, 1, 1]
+        self.order = 8
+        self.irreps = {
+            'A': [1, 1, 1, 1, 1, 1, 1, 1],
+            'B': [1, -1, 1, -1, 1, -1, 1, -1],
+            'E1': [2, np.sqrt(2), 0, -np.sqrt(2), -2, -np.sqrt(2), 0, np.sqrt(2)],
+            'E2': [2, 0, -2, 0, 2, 0, -2, 0],
+            'E3': [2, -np.sqrt(2), 0, np.sqrt(2), -2, np.sqrt(2), 0, -np.sqrt(2)]
+        }
+
+
+class T(PointGroup):
+    """T point group - pure rotational tetrahedral symmetry."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "T"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        # ε = e^(2πi/3)
+        ε = np.exp(2j * np.pi / 3)
+        self.classes = ['E', 'C3', 'C2']
+        self.class_sizes = [1, 8, 3]
+        self.order = 12
+        self.irreps = {
+            'A': [1, 1, 1],
+            'E': [2, -1, 2],
+            'T': [3, 0, -1]
+        }
+
+
+class O(PointGroup):
+    """O point group - pure rotational octahedral symmetry."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "O"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        self.classes = ['E', 'C3', 'C2', 'C4', 'C2\'']
+        self.class_sizes = [1, 8, 6, 6, 3]
+        self.order = 24
+        self.irreps = {
+            'A1': [1, 1, 1, 1, 1],
+            'A2': [1, 1, -1, -1, 1],
+            'E': [2, -1, 0, 0, 2],
+            'T1': [3, 0, -1, 1, -1],
+            'T2': [3, 0, 1, -1, -1]
+        }
+
+
+class Th(PointGroup):
+    """Th point group - T with inversion center."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "Th"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        self.classes = ['E', 'C3', 'C2', 'i', 'S6', 'σh']
+        self.class_sizes = [1, 8, 3, 1, 8, 3]
+        self.order = 24
+        self.irreps = {
+            'Ag': [1, 1, 1, 1, 1, 1],
+            'Eg': [2, -1, 2, 2, -1, 2],
+            'Tg': [3, 0, -1, 3, 0, -1],
+            'Au': [1, 1, 1, -1, -1, -1],
+            'Eu': [2, -1, 2, -2, 1, -2],
+            'Tu': [3, 0, -1, -3, 0, 1]
+        }
+
+
+class I(PointGroup):
+    """I point group - pure rotational icosahedral symmetry."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "I"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        φ = (1 + np.sqrt(5)) / 2  # golden ratio
+        self.classes = ['E', 'C5', 'C5²', 'C3', 'C2']
+        self.class_sizes = [1, 12, 12, 20, 15]
+        self.order = 60
+        self.irreps = {
+            'A': [1, 1, 1, 1, 1],
+            'T1': [3, φ, -1/φ, 0, -1],
+            'T2': [3, -1/φ, φ, 0, -1],
+            'G': [4, -1, -1, 1, 0],
+            'H': [5, 0, 0, -1, 1]
         }
 
 
@@ -1568,6 +2116,109 @@ class D4hStar(PointGroup):
         }
 
 
+class D2Star(PointGroup):
+    """D2* double group - includes half-integer representations for fermions."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D2*"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        self.classes = ['E', 'C2(z)', 'C2(y)', 'C2(x)', 'R', 'RC2(z)', 'RC2(y)', 'RC2(x)']
+        self.class_sizes = [1, 1, 1, 1, 1, 1, 1, 1]
+        self.order = 8
+        self.irreps = {
+            # Integer spin representations (same as D2)
+            'A': [1, 1, 1, 1, 1, 1, 1, 1],
+            'B1': [1, 1, -1, -1, 1, 1, -1, -1],
+            'B2': [1, -1, 1, -1, 1, -1, 1, -1],
+            'B3': [1, -1, -1, 1, 1, -1, -1, 1],
+            # Half-integer spin representations
+            'E1/2': [2, 0, 0, 0, -2, 0, 0, 0],  # j = 1/2
+            'E3/2': [2, 0, 0, 0, -2, 0, 0, 0],  # j = 3/2
+        }
+
+
+class D3Star(PointGroup):
+    """D3* double group - includes half-integer representations for fermions."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D3*"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        self.classes = ['E', 'C3', 'C2', 'R', 'RC3', 'RC2']
+        self.class_sizes = [1, 2, 3, 1, 2, 3]
+        self.order = 12
+        self.irreps = {
+            # Integer spin representations (same as D3)
+            'A1': [1, 1, 1, 1, 1, 1],
+            'A2': [1, 1, -1, 1, 1, -1],
+            'E': [2, -1, 0, 2, -1, 0],
+            # Half-integer spin representations
+            'E1/2': [2, 1, 0, -2, -1, 0],   # j = 1/2
+            'E3/2': [2, -1, 0, -2, 1, 0],   # j = 3/2
+        }
+
+
+class D6Star(PointGroup):
+    """D6* double group - includes half-integer representations for fermions."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "D6*"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        import numpy as np
+        self.classes = ['E', 'C6', 'C3', 'C2', 'C2\'', 'C2"', 'R', 'RC6', 'RC3', 'RC2', 'RC2\'', 'RC2"']
+        self.class_sizes = [1, 2, 2, 1, 3, 3, 1, 2, 2, 1, 3, 3]
+        self.order = 24
+        self.irreps = {
+            # Integer spin representations (same as D6)
+            'A1': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            'A2': [1, 1, 1, 1, -1, -1, 1, 1, 1, 1, -1, -1],
+            'B1': [1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1],
+            'B2': [1, -1, 1, -1, -1, 1, 1, -1, 1, -1, -1, 1],
+            'E1': [2, 1, -1, -2, 0, 0, 2, 1, -1, -2, 0, 0],
+            'E2': [2, -1, -1, 2, 0, 0, 2, -1, -1, 2, 0, 0],
+            # Half-integer spin representations
+            'E1/2': [2, 1, -1, -2, 0, 0, -2, -1, 1, 2, 0, 0],   # j = 1/2
+            'E3/2': [2, np.sqrt(3), 0, 0, 0, 0, -2, -np.sqrt(3), 0, 0, 0, 0],   # j = 3/2
+            'E5/2': [2, -np.sqrt(3), 0, 0, 0, 0, -2, np.sqrt(3), 0, 0, 0, 0],   # j = 5/2
+        }
+
+
+class OStar(PointGroup):
+    """O* double group - octahedral symmetry with half-integer representations (already implemented as OhStar)."""
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "O*"
+        self._initialize_character_table()
+    
+    def _initialize_character_table(self):
+        # This is the pure rotational octahedral double group
+        # For simplicity, we use the same structure as Oh* but with fewer irreps
+        self.classes = ['E', 'C3', 'C2', 'C4', 'C2\'', 'R', 'RC3', 'RC2', 'RC4', 'RC2\'']
+        self.class_sizes = [1, 8, 6, 6, 3, 1, 8, 6, 6, 3]
+        self.order = 48  # Double the original O order (24)
+        self.irreps = {
+            # Integer spin representations (same as O)
+            'A1': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            'A2': [1, 1, -1, -1, 1, 1, 1, -1, -1, 1],
+            'E': [2, -1, 0, 0, 2, 2, -1, 0, 0, 2],
+            'T1': [3, 0, -1, 1, -1, 3, 0, -1, 1, -1],
+            'T2': [3, 0, 1, -1, -1, 3, 0, 1, -1, -1],
+            # Half-integer spin representations
+            'E1/2': [2, 1, 0, 0, -2, -2, -1, 0, 0, 2],     # j = 1/2
+            'E3/2': [4, 1, 0, 0, 0, -4, -1, 0, 0, 0],      # j = 3/2
+            'E5/2': [4, -1, 0, 0, 0, -4, 1, 0, 0, 0],      # j = 5/2
+        }
+
+
 class PointGroupFactory:
     """Factory class to create point group objects."""
     
@@ -1578,20 +2229,44 @@ class PointGroupFactory:
         'Cs': Cs,
         'C2': C2,
         'C3': C3,
+        'C4': C4,
+        'C5': C5,
+        'C6': C6,
+        'C7': C7,
+        'C8': C8,
         'C2v': C2v,
         'C3v': C3v,
         'C4v': C4v,
         'C5v': C5v,
         'C6v': C6v,
+        'C2h': C2h,
+        'C3h': C3h,
+        'C4h': C4h,
+        'C5h': C5h,
+        'C6h': C6h,
         'D2': D2,
         'D2h': D2h,
         'D3': D3,
         'D3h': D3h,
+        'D4': D4,
         'D4h': D4h,
+        'D5': D5,
         'D5h': D5h,
         'D6h': D6h,
+        'D2d': D2d,
+        'D3d': D3d,
+        'D4d': D4d,
+        'D5d': D5d,
+        'D6d': D6d,
+        'S4': S4,
+        'S6': S6,
+        'S8': S8,
+        'T': T,
         'Td': Td,
+        'Th': Th,
+        'O': O,
         'Oh': Oh,
+        'I': I,
         'Ih': Ih,
         'Cinfv': Cinfv,
         'C∞v': Cinfv,
@@ -1602,6 +2277,10 @@ class PointGroupFactory:
         'Oh*': OhStar,
         'Td*': TdStar,
         'D4h*': D4hStar,
+        'D2*': D2Star,
+        'D3*': D3Star,
+        'D6*': D6Star,
+        'O*': OStar,
     }
     
     @classmethod
