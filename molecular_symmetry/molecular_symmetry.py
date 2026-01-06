@@ -31,47 +31,169 @@ class PointGroup(ABC):
         """Initialize the character table for this point group."""
         pass
     
-    def reduce_representation(self, reducible_rep: List[float]) -> Dict[str, int]:
+    def reduce_representation(self, reducible_rep: List[float], tolerance: float = 1e-6) -> Dict[str, int]:
         """
-        Reduce a reducible representation to irreducible representations.
+        Reduce a reducible representation to irreducible representations with comprehensive error checking.
         
         Args:
             reducible_rep: List of characters for each symmetry class
+            tolerance: Numerical tolerance for validating the reduction (default: 1e-6)
             
         Returns:
             Dictionary mapping irrep names to their coefficients
+            
+        Raises:
+            ValueError: If input is invalid or reduction fails validation
+            TypeError: If input contains invalid data types
         """
+        # Input validation
+        if not isinstance(reducible_rep, (list, tuple)):
+            raise TypeError(f"reducible_rep must be a list or tuple, got {type(reducible_rep)}")
+        
         if len(reducible_rep) != len(self.classes):
             raise ValueError(
                 f"Reducible representation must have {len(self.classes)} characters "
-                f"for point group {self.name}, got {len(reducible_rep)}"
+                f"for point group {self.name}, got {len(reducible_rep)}. "
+                f"Expected classes: {self.classes}"
             )
         
+        # Validate that all characters are numeric
+        try:
+            numeric_rep = [complex(char) for char in reducible_rep]
+        except (ValueError, TypeError) as e:
+            raise TypeError(f"All characters must be numeric. Error converting: {e}")
+        
+        # Check for NaN or infinite values
+        import math
+        for i, char in enumerate(numeric_rep):
+            if not math.isfinite(char.real) or not math.isfinite(char.imag):
+                raise ValueError(f"Character at position {i} ({char}) is not finite (NaN or infinity)")
+        
         coefficients = {}
+        problematic_coeffs = []
         
         for irrep_name, irrep_chars in self.irreps.items():
-            # Reduction formula: a_i = (1/h) * Σ(n_c * χ_reducible * χ_irrep)
-            coeff = sum(
-                class_size * char_red * char_irrep
-                for class_size, char_red, char_irrep in 
-                zip(self.class_sizes, reducible_rep, irrep_chars)
-            ) / self.order
-            
-            # Handle complex coefficients by taking the real part
-            if hasattr(coeff, 'real'):
-                # Check that imaginary part is negligible
-                if abs(getattr(coeff, 'imag', 0)) > 1e-10:
-                    import warnings
-                    warnings.warn(f"Non-negligible imaginary part {coeff.imag} in coefficient for {irrep_name}")
-                coeff_real = float(coeff.real)
-            else:
-                coeff_real = float(coeff)
-            
-            coeff_int = int(round(coeff_real))
-            if abs(coeff_int) > 0:
-                coefficients[irrep_name] = coeff_int
+            try:
+                # Reduction formula: a_i = (1/h) * Σ(n_c * χ_reducible * χ_irrep)
+                coeff = sum(
+                    class_size * char_red * char_irrep
+                    for class_size, char_red, char_irrep in 
+                    zip(self.class_sizes, numeric_rep, irrep_chars)
+                ) / self.order
+                
+                # Handle complex coefficients by taking the real part
+                if hasattr(coeff, 'real'):
+                    # Check that imaginary part is negligible
+                    if abs(getattr(coeff, 'imag', 0)) > 1e-10:
+                        import warnings
+                        warnings.warn(f"Non-negligible imaginary part {coeff.imag} in coefficient for {irrep_name}")
+                    coeff_real = float(coeff.real)
+                else:
+                    coeff_real = float(coeff)
+                
+                # Check if coefficient is close to an integer (within tolerance)
+                nearest_int = round(coeff_real)
+                if abs(coeff_real - nearest_int) > tolerance:
+                    problematic_coeffs.append((irrep_name, coeff_real, nearest_int))
+                
+                coeff_int = int(nearest_int)
+                if abs(coeff_int) > 0:
+                    coefficients[irrep_name] = coeff_int
+                    
+            except Exception as e:
+                raise ValueError(f"Error calculating coefficient for irrep '{irrep_name}': {e}")
+        
+        # Validate the reduction result
+        self._validate_reduction(reducible_rep, coefficients, problematic_coeffs, tolerance)
         
         return coefficients
+    
+    def _validate_reduction(self, original_rep: List[float], coefficients: Dict[str, int], 
+                          problematic_coeffs: List, tolerance: float):
+        """
+        Validate that the reduction is mathematically correct.
+        
+        Args:
+            original_rep: Original reducible representation
+            coefficients: Calculated coefficients
+            problematic_coeffs: List of coefficients that weren't close to integers
+            tolerance: Numerical tolerance
+        """
+        # Check for problematic coefficients that weren't close to integers
+        if problematic_coeffs:
+            error_details = []
+            max_deviation = 0
+            for irrep_name, real_coeff, rounded_coeff in problematic_coeffs:
+                deviation = abs(real_coeff - rounded_coeff)
+                max_deviation = max(max_deviation, deviation)
+                error_details.append(f"  {irrep_name}: {real_coeff:.6f} → {rounded_coeff} (deviation: {deviation:.6f})")
+            
+            # Be more lenient if the deviation is systematic (suggests wrong input)
+            # vs. numerical precision issues
+            problematic_fraction = len(problematic_coeffs) / len(self.irreps)
+            
+            if problematic_fraction > 0.6 and max_deviation > 0.1:  # More than 60% with large deviations
+                raise ValueError(
+                    f"Reduction failed: input appears to be an invalid reducible representation for {self.name}.\n"
+                    f"Most coefficients ({problematic_fraction:.1%}) are far from integers (max deviation: {max_deviation:.6f}):\n" +
+                    "\n".join(error_details) +
+                    f"\n\nHint: Ensure your representation uses the correct symmetry operations and character values."
+                )
+            elif problematic_fraction > 0.3:  # More than 30% problematic but smaller deviations
+                import warnings
+                warnings.warn(
+                    f"Reduction warning for {self.name}: {problematic_fraction:.1%} of coefficients are not close to integers "
+                    f"(tolerance={tolerance}, max deviation: {max_deviation:.6f}):\n" + 
+                    "\n".join(error_details) + 
+                    "\nResults may be inaccurate due to numerical precision or invalid input."
+                )
+        
+        # Check that coefficients are non-negative integers
+        for irrep_name, coeff in coefficients.items():
+            if not isinstance(coeff, int) or coeff < 0:
+                raise ValueError(f"Invalid coefficient {coeff} for irrep '{irrep_name}': must be non-negative integer")
+        
+        # Reconstruct the representation from the reduction and compare
+        if coefficients:  # Only validate if we have a non-empty result
+            try:
+                reconstructed = self._reconstruct_representation(coefficients)
+                
+                # Check if reconstructed matches original within tolerance
+                max_diff = 0
+                for orig, recon in zip(original_rep, reconstructed):
+                    diff = abs(complex(orig) - complex(recon))
+                    max_diff = max(max_diff, diff)
+                
+                if max_diff > tolerance * 10:  # Allow 10x tolerance for reconstruction
+                    import warnings
+                    warnings.warn(
+                        f"Reconstruction check failed for {self.name}: max difference {max_diff:.2e} > {tolerance*10:.2e}. "
+                        f"Original: {original_rep}, Reconstructed: {[round(x.real, 6) for x in reconstructed]}"
+                    )
+            
+            except Exception as e:
+                import warnings
+                warnings.warn(f"Could not validate reconstruction: {e}")
+    
+    def _reconstruct_representation(self, coefficients: Dict[str, int]) -> List[complex]:
+        """
+        Reconstruct a reducible representation from irrep coefficients.
+        
+        Args:
+            coefficients: Dictionary of irrep coefficients
+            
+        Returns:
+            List of reconstructed characters
+        """
+        reconstructed = [0] * len(self.classes)
+        
+        for irrep_name, coeff in coefficients.items():
+            if irrep_name in self.irreps:
+                irrep_chars = self.irreps[irrep_name]
+                for i, char in enumerate(irrep_chars):
+                    reconstructed[i] += coeff * char
+        
+        return reconstructed
     
     def print_character_table(self):
         """Print the character table in a formatted way."""
@@ -103,19 +225,40 @@ class PointGroup(ABC):
             print(row)
     
     def get_symmetry_label(self, reducible_rep: List[float]) -> str:
-        """Get a formatted symmetry label from a reducible representation."""
-        irreps = self.reduce_representation(reducible_rep)
-        if not irreps:
-            return "0"
+        """
+        Get a formatted symmetry label from a reducible representation.
         
-        terms = []
-        for irrep, coeff in irreps.items():
-            if coeff == 1:
-                terms.append(irrep)
-            else:
-                terms.append(f"{coeff}{irrep}")
+        This is a convenience wrapper around reduce_representation that provides
+        nicely formatted output with error handling.
         
-        return " ⊕ ".join(terms)
+        Args:
+            reducible_rep: List of characters for each symmetry class
+            
+        Returns:
+            Formatted string showing the decomposition (e.g., "A1 ⊕ 2B1 ⊕ T2g")
+            or an error message if the reduction fails
+            
+        Example:
+            >>> oh = get_point_group('Oh')
+            >>> oh.get_symmetry_label([6, 0, 0, 2, 2, 0, 0, 0, 4, 2])
+            'A1g ⊕ Eg ⊕ T1u'
+        """
+        try:
+            irreps = self.reduce_representation(reducible_rep)
+            if not irreps:
+                return "0"
+            
+            terms = []
+            for irrep, coeff in irreps.items():
+                if coeff == 1:
+                    terms.append(irrep)
+                else:
+                    terms.append(f"{coeff}{irrep}")
+            
+            return " ⊕ ".join(terms)
+            
+        except Exception as e:
+            return f"Error: {str(e)[:100]}{'...' if len(str(e)) > 100 else ''}"
     
     def direct_product(self, irrep1: str, irrep2: str) -> Dict[str, int]:
         """
