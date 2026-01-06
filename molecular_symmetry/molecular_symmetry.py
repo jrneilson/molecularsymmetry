@@ -57,7 +57,17 @@ class PointGroup(ABC):
                 zip(self.class_sizes, reducible_rep, irrep_chars)
             ) / self.order
             
-            coeff_int = int(round(coeff))
+            # Handle complex coefficients by taking the real part
+            if hasattr(coeff, 'real'):
+                # Check that imaginary part is negligible
+                if abs(getattr(coeff, 'imag', 0)) > 1e-10:
+                    import warnings
+                    warnings.warn(f"Non-negligible imaginary part {coeff.imag} in coefficient for {irrep_name}")
+                coeff_real = float(coeff.real)
+            else:
+                coeff_real = float(coeff)
+            
+            coeff_int = int(round(coeff_real))
             if abs(coeff_int) > 0:
                 coefficients[irrep_name] = coeff_int
         
