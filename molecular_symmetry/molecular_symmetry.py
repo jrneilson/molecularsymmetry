@@ -31,19 +31,24 @@ class PointGroup(ABC):
         """Initialize the character table for this point group."""
         pass
     
-    def reduce_representation(self, reducible_rep: List[float], tolerance: float = 1e-6) -> Dict[str, int]:
+    def reduce_representation(self, reducible_rep: List[float], tolerance: float = 1e-6, 
+                            strict: bool = False) -> Dict[str, int]:
         """
         Reduce a reducible representation to irreducible representations with comprehensive error checking.
         
         Args:
             reducible_rep: List of characters for each symmetry class
             tolerance: Numerical tolerance for validating the reduction (default: 1e-6)
+            strict: If True, raise exceptions for invalid input. If False, return best-effort 
+                   results with warnings (default: False for smooth user experience)
             
         Returns:
-            Dictionary mapping irrep names to their coefficients
+            Dictionary mapping irrep names to their coefficients. May contain rounded
+            results if the input is not a perfect reducible representation.
             
         Raises:
-            ValueError: If input is invalid or reduction fails validation
+            ValueError: Only if input is fundamentally invalid (wrong length, non-numeric, etc.)
+                       or if strict=True and reduction quality is poor
             TypeError: If input contains invalid data types
         """
         # Input validation
@@ -104,12 +109,12 @@ class PointGroup(ABC):
                 raise ValueError(f"Error calculating coefficient for irrep '{irrep_name}': {e}")
         
         # Validate the reduction result
-        self._validate_reduction(reducible_rep, coefficients, problematic_coeffs, tolerance)
+        self._validate_reduction(reducible_rep, coefficients, problematic_coeffs, tolerance, strict)
         
         return coefficients
     
     def _validate_reduction(self, original_rep: List[float], coefficients: Dict[str, int], 
-                          problematic_coeffs: List, tolerance: float):
+                          problematic_coeffs: List, tolerance: float, strict: bool = False):
         """
         Validate that the reduction is mathematically correct.
         
@@ -118,6 +123,7 @@ class PointGroup(ABC):
             coefficients: Calculated coefficients
             problematic_coeffs: List of coefficients that weren't close to integers
             tolerance: Numerical tolerance
+            strict: If True, raise exceptions for poor quality reductions
         """
         # Check for problematic coefficients that weren't close to integers
         if problematic_coeffs:
@@ -133,12 +139,20 @@ class PointGroup(ABC):
             problematic_fraction = len(problematic_coeffs) / len(self.irreps)
             
             if problematic_fraction > 0.6 and max_deviation > 0.1:  # More than 60% with large deviations
-                raise ValueError(
-                    f"Reduction failed: input appears to be an invalid reducible representation for {self.name}.\n"
+                message = (
+                    f"Reduction quality warning for {self.name}: input may be an invalid reducible representation.\n"
                     f"Most coefficients ({problematic_fraction:.1%}) are far from integers (max deviation: {max_deviation:.6f}):\n" +
                     "\n".join(error_details) +
-                    f"\n\nHint: Ensure your representation uses the correct symmetry operations and character values."
+                    f"\n\nHint: Ensure your representation uses the correct symmetry operations and character values.\n"
+                    f"Results are rounded to nearest integers but may be inaccurate."
                 )
+                
+                if strict:
+                    raise ValueError(f"Reduction failed: {message}")
+                else:
+                    import warnings
+                    warnings.warn(message)
+                    
             elif problematic_fraction > 0.3:  # More than 30% problematic but smaller deviations
                 import warnings
                 warnings.warn(
@@ -151,7 +165,12 @@ class PointGroup(ABC):
         # Check that coefficients are non-negative integers
         for irrep_name, coeff in coefficients.items():
             if not isinstance(coeff, int) or coeff < 0:
-                raise ValueError(f"Invalid coefficient {coeff} for irrep '{irrep_name}': must be non-negative integer")
+                message = f"Invalid coefficient {coeff} for irrep '{irrep_name}': must be non-negative integer"
+                if strict:
+                    raise ValueError(message)
+                else:
+                    import warnings
+                    warnings.warn(f"Warning: {message}. This suggests an invalid input representation.")
         
         # Reconstruct the representation from the reduction and compare
         if coefficients:  # Only validate if we have a non-empty result
