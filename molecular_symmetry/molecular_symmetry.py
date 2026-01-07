@@ -1044,13 +1044,15 @@ class C4(PointGroup):
     
     def _initialize_character_table(self):
         import numpy as np
+        # For C4, we need 1-dimensional E1 and E2 irreps (complex conjugate pairs)
         self.classes = ['E', 'C4', 'C2', 'C4³']
         self.class_sizes = [1, 1, 1, 1]
         self.order = 4
         self.irreps = {
             'A': [1, 1, 1, 1],
             'B': [1, -1, 1, -1],
-            'E': [2, 0, -2, 0]
+            'E1': [1, 1j, -1, -1j],      # ε = i for C4
+            'E2': [1, -1j, -1, 1j]       # ε* = -i for C4
         }
 
 
@@ -1064,17 +1066,16 @@ class C5(PointGroup):
     
     def _initialize_character_table(self):
         import numpy as np
-        # ε = e^(2πi/5)
-        ε = np.exp(2j * np.pi / 5)
+        # For C5, characters are 2*cos(2πk/5) for the E representations
+        cos72 = 2 * np.cos(2 * np.pi / 5)      # 2*cos(72°) ≈ 0.618
+        cos144 = 2 * np.cos(4 * np.pi / 5)    # 2*cos(144°) ≈ -1.618
         self.classes = ['E', 'C5', 'C5²', 'C5³', 'C5⁴']
         self.class_sizes = [1, 1, 1, 1, 1]
         self.order = 5
         self.irreps = {
             'A': [1, 1, 1, 1, 1],
-            'E1a': [1, ε, ε**2, ε**3, ε**4],
-            'E1b': [1, ε.conjugate(), (ε**2).conjugate(), (ε**3).conjugate(), (ε**4).conjugate()],
-            'E2a': [1, ε**2, ε**4, ε, ε**3],
-            'E2b': [1, (ε**2).conjugate(), (ε**4).conjugate(), ε.conjugate(), (ε**3).conjugate()]
+            'E1': [2, cos72, cos144, cos144, cos72],
+            'E2': [2, cos144, cos72, cos72, cos144]
         }
 
 
@@ -1111,19 +1112,18 @@ class C7(PointGroup):
     
     def _initialize_character_table(self):
         import numpy as np
-        # ε = e^(2πi/7)
-        ε = np.exp(2j * np.pi / 7)
+        # For C7, characters are 2*cos(2πk/7) for the E representations
+        cos1 = 2 * np.cos(2 * np.pi / 7)       # 2*cos(51.43°) ≈ 1.247  
+        cos2 = 2 * np.cos(4 * np.pi / 7)       # 2*cos(102.86°) ≈ -0.445
+        cos3 = 2 * np.cos(6 * np.pi / 7)       # 2*cos(154.29°) ≈ -1.802
         self.classes = ['E', 'C7', 'C7²', 'C7³', 'C7⁴', 'C7⁵', 'C7⁶']
         self.class_sizes = [1, 1, 1, 1, 1, 1, 1]
         self.order = 7
         self.irreps = {
             'A': [1, 1, 1, 1, 1, 1, 1],
-            'E1a': [1, ε, ε**2, ε**3, ε**4, ε**5, ε**6],
-            'E1b': [1, ε.conjugate(), (ε**2).conjugate(), (ε**3).conjugate(), (ε**4).conjugate(), (ε**5).conjugate(), (ε**6).conjugate()],
-            'E2a': [1, ε**2, ε**4, ε**6, ε, ε**3, ε**5],
-            'E2b': [1, (ε**2).conjugate(), (ε**4).conjugate(), (ε**6).conjugate(), ε.conjugate(), (ε**3).conjugate(), (ε**5).conjugate()],
-            'E3a': [1, ε**3, ε**6, ε**2, ε**5, ε, ε**4],
-            'E3b': [1, (ε**3).conjugate(), (ε**6).conjugate(), (ε**2).conjugate(), (ε**5).conjugate(), ε.conjugate(), (ε**4).conjugate()]
+            'E1': [2, cos1, cos2, cos3, cos3, cos2, cos1],
+            'E2': [2, cos2, cos3, cos1, cos1, cos3, cos2],
+            'E3': [2, cos3, cos1, cos2, cos2, cos1, cos3]
         }
 
 
