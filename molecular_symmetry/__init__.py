@@ -15,6 +15,9 @@ from .molecular_symmetry import (
     # Direct product functions
     calculate_direct_product,
     direct_product_label,
+    calculate_multi_direct_product,
+    multi_direct_product_label,
+    parse_irrep_string,
     # Point group classes
     C1, Ci, Cs, C2, C3, C4, C5, C6, C7, C8,
     C2v, C3v, C4v, C5v, C6v, C2h, C3h, C4h, C5h, C6h,
@@ -38,6 +41,9 @@ __all__ = [
     # Direct product functions
     "calculate_direct_product",
     "direct_product_label",
+    "calculate_multi_direct_product",
+    "multi_direct_product_label",
+    "parse_irrep_string",
     # Point groups
     "C1", "Ci", "Cs", "C2", "C3", "C4", "C5", "C6", "C7", "C8",
     "C2v", "C3v", "C4v", "C5v", "C6v", "C2h", "C3h", "C4h", "C5h", "C6h",

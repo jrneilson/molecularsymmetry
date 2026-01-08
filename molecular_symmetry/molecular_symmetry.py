@@ -2372,6 +2372,103 @@ def direct_product_label(point_group_name: str, irrep1: str, irrep2: str) -> str
     return " ⊕ ".join(terms)
 
 
+def parse_irrep_string(irrep_string: str) -> list:
+    """
+    Parse a string containing multiple irrep labels separated by common delimiters.
+    
+    Args:
+        irrep_string: String containing irrep labels (e.g., "T1u T2g", "T1u,T2g", "T1u×T2g")
+        
+    Returns:
+        List of individual irrep labels
+        
+    Example:
+        >>> parse_irrep_string("T1u T2g Eg")
+        ['T1u', 'T2g', 'Eg']
+        >>> parse_irrep_string("T1u,T2g,Eg")
+        ['T1u', 'T2g', 'Eg'] 
+        >>> parse_irrep_string("T1u×T2g×Eg")
+        ['T1u', 'T2g', 'Eg']
+    """
+    import re
+    # Split on various common delimiters: space, comma, ×, *, x, ⊗
+    irrep_list = re.split(r'[,\s×*x⊗]+', irrep_string.strip())
+    # Remove empty strings and strip whitespace
+    return [irrep.strip() for irrep in irrep_list if irrep.strip()]
+
+
+def calculate_multi_direct_product(point_group_name: str, irreps: str) -> Dict[str, int]:
+    """
+    Calculate direct product of multiple irreps recursively.
+    
+    Args:
+        point_group_name: Name of the point group (e.g., 'Oh', 'Td')
+        irreps: String containing multiple irrep labels or list of irrep labels
+        
+    Returns:
+        Dictionary mapping irrep names to coefficients in the final direct product
+        
+    Example:
+        >>> calculate_multi_direct_product('Oh', 'T1u T2g Eg')
+        {'T1g': 1, 'T2g': 2, 'A2g': 1, 'Eg': 1, 'A1g': 1}
+        >>> calculate_multi_direct_product('Oh', 'T1u,T2g,Eg')
+        {'T1g': 1, 'T2g': 2, 'A2g': 1, 'Eg': 1, 'A1g': 1}
+    """
+    # Parse irreps if it's a string
+    if isinstance(irreps, str):
+        irrep_list = parse_irrep_string(irreps)
+    else:
+        irrep_list = list(irreps)
+    
+    if len(irrep_list) < 2:
+        raise ValueError("At least two irreps are required for direct product calculation")
+    
+    # Start with the first two irreps
+    result = calculate_direct_product(point_group_name, irrep_list[0], irrep_list[1])
+    
+    # Recursively calculate direct product with remaining irreps
+    for i in range(2, len(irrep_list)):
+        next_irrep = irrep_list[i]
+        new_result = {}
+        
+        # Calculate direct product of current result with next irrep
+        for current_irrep, current_coeff in result.items():
+            product = calculate_direct_product(point_group_name, current_irrep, next_irrep)
+            
+            # Add the contributions to new_result
+            for irrep, coeff in product.items():
+                new_result[irrep] = new_result.get(irrep, 0) + current_coeff * coeff
+        
+        result = new_result
+    
+    return result
+
+
+def multi_direct_product_label(point_group_name: str, irreps: str) -> str:
+    """
+    Get formatted label for direct product of multiple irreps.
+    
+    Args:
+        point_group_name: Name of the point group
+        irreps: String containing multiple irrep labels
+        
+    Returns:
+        Formatted string showing the direct product decomposition
+        
+    Example:
+        >>> multi_direct_product_label('Oh', 'T1u T2g Eg')
+        'T1g ⊕ 2T2g ⊕ A2g ⊕ Eg ⊕ A1g'
+    """
+    product = calculate_multi_direct_product(point_group_name, irreps)
+    terms = []
+    for irrep, coeff in product.items():
+        if coeff == 1:
+            terms.append(irrep)
+        else:
+            terms.append(f"{coeff}{irrep}")
+    return " ⊕ ".join(terms)
+
+
 if __name__ == "__main__":
     # Demo of the package
     print("Molecular Symmetry Analysis Package")
@@ -2393,3 +2490,14 @@ if __name__ == "__main__":
     d_rep = [5, 2, 1, 1, 1, 5, 1, 2, 1, 1]
     print(f"Γ_d = {d_rep}")
     print(f"Reduction: {oh.get_symmetry_label(d_rep)}")
+    
+    print("\n\nDirect Product Examples:")
+    print(f"T1u × T2g = {direct_product_label('Oh', 'T1u', 'T2g')}")
+    
+    print("\nMulti-Irrep Direct Product Examples:")
+    print(f"T1u × T2g × Eg = {multi_direct_product_label('Oh', 'T1u T2g Eg')}")
+    print(f"A1g × T1u × T1u = {multi_direct_product_label('Oh', 'A1g T1u T1u')}")
+    print(f"Various formats supported:")
+    print(f"  Space separated: {multi_direct_product_label('Oh', 'T1g T2g Eg')}")
+    print(f"  Comma separated: {multi_direct_product_label('Oh', 'T1g,T2g,Eg')}")
+    print(f"  Mixed delimiters: {multi_direct_product_label('Oh', 'T1g × T2g , Eg')}")
