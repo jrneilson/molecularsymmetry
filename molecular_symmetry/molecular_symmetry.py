@@ -2397,26 +2397,26 @@ def parse_irrep_string(irrep_string: str) -> list:
     return [irrep.strip() for irrep in irrep_list if irrep.strip()]
 
 
-def calculate_multi_direct_product(point_group_name: str, irreps: str) -> Dict[str, int]:
+def calculate_multi_direct_product(point_group_name: str, *irreps) -> Dict[str, int]:
     """
     Calculate direct product of multiple irreps recursively.
     
     Args:
         point_group_name: Name of the point group (e.g., 'Oh', 'Td')
-        irreps: String containing multiple irrep labels or list of irrep labels
+        *irreps: Variable number of irrep labels as separate arguments
         
     Returns:
         Dictionary mapping irrep names to coefficients in the final direct product
         
     Example:
-        >>> calculate_multi_direct_product('Oh', 'T1u T2g Eg')
-        {'T1g': 1, 'T2g': 2, 'A2g': 1, 'Eg': 1, 'A1g': 1}
-        >>> calculate_multi_direct_product('Oh', 'T1u,T2g,Eg')
-        {'T1g': 1, 'T2g': 2, 'A2g': 1, 'Eg': 1, 'A1g': 1}
+        >>> calculate_multi_direct_product('Oh', 'T1u', 'T2g', 'Eg')
+        {'Eu': 2, 'A1u': 1, 'A2u': 1, 'T1u': 2, 'T2u': 2}
+        >>> calculate_multi_direct_product('Td', 'A1', 'E', 'T2')
+        {'T1': 1, 'T2': 1, 'E': 1}
     """
-    # Parse irreps if it's a string
-    if isinstance(irreps, str):
-        irrep_list = parse_irrep_string(irreps)
+    # Handle the case where a single string with multiple irreps is passed for backwards compatibility
+    if len(irreps) == 1 and isinstance(irreps[0], str) and any(delimiter in irreps[0] for delimiter in [' ', ',', '×', '*', 'x', '⊗']):
+        irrep_list = parse_irrep_string(irreps[0])
     else:
         irrep_list = list(irreps)
     
@@ -2444,22 +2444,24 @@ def calculate_multi_direct_product(point_group_name: str, irreps: str) -> Dict[s
     return result
 
 
-def multi_direct_product_label(point_group_name: str, irreps: str) -> str:
+def multi_direct_product_label(point_group_name: str, *irreps) -> str:
     """
     Get formatted label for direct product of multiple irreps.
     
     Args:
         point_group_name: Name of the point group
-        irreps: String containing multiple irrep labels
+        *irreps: Variable number of irrep labels as separate arguments
         
     Returns:
         Formatted string showing the direct product decomposition
         
     Example:
-        >>> multi_direct_product_label('Oh', 'T1u T2g Eg')
-        'T1g ⊕ 2T2g ⊕ A2g ⊕ Eg ⊕ A1g'
+        >>> multi_direct_product_label('Oh', 'T1u', 'T2g', 'Eg')
+        '2Eu ⊕ A1u ⊕ A2u ⊕ 2T1u ⊕ 2T2u'
+        >>> multi_direct_product_label('Td', 'A1', 'E', 'T2')
+        'T1 ⊕ T2 ⊕ E'
     """
-    product = calculate_multi_direct_product(point_group_name, irreps)
+    product = calculate_multi_direct_product(point_group_name, *irreps)
     terms = []
     for irrep, coeff in product.items():
         if coeff == 1:
@@ -2495,9 +2497,7 @@ if __name__ == "__main__":
     print(f"T1u × T2g = {direct_product_label('Oh', 'T1u', 'T2g')}")
     
     print("\nMulti-Irrep Direct Product Examples:")
-    print(f"T1u × T2g × Eg = {multi_direct_product_label('Oh', 'T1u T2g Eg')}")
-    print(f"A1g × T1u × T1u = {multi_direct_product_label('Oh', 'A1g T1u T1u')}")
-    print(f"Various formats supported:")
-    print(f"  Space separated: {multi_direct_product_label('Oh', 'T1g T2g Eg')}")
-    print(f"  Comma separated: {multi_direct_product_label('Oh', 'T1g,T2g,Eg')}")
-    print(f"  Mixed delimiters: {multi_direct_product_label('Oh', 'T1g × T2g , Eg')}")
+    print(f"T1u × T2g × Eg = {multi_direct_product_label('Oh', 'T1u', 'T2g', 'Eg')}")
+    print(f"A1g × T1u × T1u = {multi_direct_product_label('Oh', 'A1g', 'T1u', 'T1u')}")
+    print(f"Four irreps: {multi_direct_product_label('Oh', 'T1g', 'T2g', 'Eg', 'A1g')}")
+    print(f"Backwards compatibility (string): {multi_direct_product_label('Oh', 'T1g T2g Eg')}")
